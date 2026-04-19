@@ -13,7 +13,6 @@ load_dotenv()
 
 MONGO_URI = os.getenv(
     "MONGO_URI",
-    "mongodb+srv://ni2educational_db_user:VFiMDwYDSZLjLw94@cluster0.t0ulkd9.mongodb.net/?appName=Cluster0",
 )
 MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "sentinelguard_ai")
 

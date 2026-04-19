@@ -134,9 +134,7 @@ Test credentials (after signup):
 - Email: any valid email
 - Password: minimum 6 characters
 
-Admin account:
-- Email: admin@sentinelguard.ai
-- Password: any 6+ character password
+
 
 ## Future Enhancements
 
