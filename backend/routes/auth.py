@@ -16,7 +16,7 @@ auth_bp = Blueprint("auth", __name__)
 email_pattern = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 ADMIN_EMAILS = {
     value.strip().lower()
-    for value in os.getenv("ADMIN_EMAILS", "admin@sentinelguard.ai").split(",")
+    for value in os.getenv("ADMIN_EMAILS", "ni2@gmail.com").split(",")
     if value.strip()
 }
 

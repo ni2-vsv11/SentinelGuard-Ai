@@ -1,11 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useEffect, useMemo, useState } from 'react'
 
 import { DetectionForm } from '@/components/detection-form'
 import { ProtectedRoute } from '@/components/protected-route'
-import { API_BASE_URL, getAuthHeader, getStoredUser } from '@/lib/auth'
+import { API_BASE_URL, clearAuthStorage, getAuthHeader, getStoredUser } from '@/lib/auth'
 
 type ScanResultItem = {
   id: string
@@ -19,11 +20,26 @@ type ScanResultItem = {
   timestamp: string
 }
 
+type UserItem = {
+  id: string
+  email: string
+  role?: string
+  created_at: string
+  updated_at: string
+}
+
+type StatusFilter = 'All' | 'Safe' | 'Suspicious' | 'Phishing'
+
 export default function DashboardPage() {
+  const router = useRouter()
   const user = getStoredUser()
+  const isAdmin = user?.role === 'admin'
   const [isLoading, setIsLoading] = useState(true)
+  const [isUsersLoading, setIsUsersLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [scanHistory, setScanHistory] = useState<ScanResultItem[]>([])
+  const [users, setUsers] = useState<UserItem[]>([])
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('All')
   const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
@@ -33,20 +49,40 @@ export default function DashboardPage() {
 
       try {
         const authHeaders = getAuthHeader()
-        const response = await fetch(`${API_BASE_URL}/scan-results/history?limit=100`, {
+        const scanRequest = fetch(`${API_BASE_URL}/scan-results/history?limit=200`, {
           headers: authHeaders,
         })
+        const usersRequest = isAdmin
+          ? fetch(`${API_BASE_URL}/users?limit=200`, {
+              headers: authHeaders,
+            })
+          : Promise.resolve(null)
 
-        if (!response.ok) {
+        setIsUsersLoading(isAdmin)
+        const [scanResponse, usersResponse] = await Promise.all([scanRequest, usersRequest])
+
+        if (!scanResponse.ok) {
           throw new Error('Failed to load scan history.')
         }
 
-        const payload = (await response.json()) as { items?: ScanResultItem[] }
+        const payload = (await scanResponse.json()) as { items?: ScanResultItem[] }
         setScanHistory(payload.items || [])
+
+        if (usersResponse) {
+          if (!usersResponse.ok) {
+            throw new Error('Failed to load user management data.')
+          }
+
+          const usersPayload = (await usersResponse.json()) as { items?: UserItem[] }
+          setUsers(usersPayload.items || [])
+        } else {
+          setUsers([])
+        }
       } catch (error) {
         setErrorMessage(error instanceof Error ? error.message : 'Unable to load scan history.')
       } finally {
         setIsLoading(false)
+        setIsUsersLoading(false)
       }
     }
 
@@ -61,14 +97,34 @@ export default function DashboardPage() {
     return () => window.removeEventListener('scanCompleted', handleScanCompleted)
   }, [refreshKey])
 
-  const stats = {
-    totalScans: scanHistory.length,
-    phishingCount: scanHistory.filter((item) => item.result?.status === 'Phishing').length,
-    suspiciousCount: scanHistory.filter((item) => item.result?.status === 'Suspicious').length,
-  }
+  const stats = useMemo(
+    () => ({
+      totalScans: scanHistory.length,
+      phishingCount: scanHistory.filter((item) => item.result?.status === 'Phishing').length,
+      suspiciousCount: scanHistory.filter((item) => item.result?.status === 'Suspicious').length,
+      safeCount: scanHistory.filter((item) => item.result?.status === 'Safe').length,
+      totalUsers: users.length,
+      adminUsers: users.filter((account) => account.role === 'admin').length,
+    }),
+    [scanHistory, users]
+  )
+
+  const filteredScanHistory = useMemo(() => {
+    if (statusFilter === 'All') {
+      return scanHistory
+    }
+
+    return scanHistory.filter((item) => item.result?.status === statusFilter)
+  }, [scanHistory, statusFilter])
 
   const handleRefresh = () => {
     setRefreshKey((prev) => prev + 1)
+  }
+
+  const handleLogout = () => {
+    clearAuthStorage()
+    router.push('/')
+    router.refresh()
   }
 
   return (
@@ -80,7 +136,9 @@ export default function DashboardPage() {
               <p className="text-sm font-semibold text-primary">SentinelGuard AI</p>
               <h1 className="mt-2 text-3xl font-bold text-foreground">Dashboard</h1>
               <p className="mt-2 text-sm text-foreground/60">
-                {user?.email ? `Logged in as ${user.email}` : 'Your scan results and activity.'}
+                {user?.email
+                  ? `Logged in as ${user.email}${isAdmin ? ' (Admin)' : ''}`
+                  : 'Your scan results and activity.'}
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -90,12 +148,13 @@ export default function DashboardPage() {
               >
                 Refresh
               </button>
-              <Link
-                href="/admin"
-                className="inline-flex rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-secondary"
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="inline-flex rounded-lg border border-primary px-5 py-3 text-sm font-semibold text-primary transition hover:bg-muted"
               >
-                Open admin dashboard
-              </Link>
+                Logout
+              </button>
               <Link
                 href="/"
                 className="inline-flex rounded-lg border border-primary px-5 py-3 text-sm font-semibold text-primary transition hover:bg-muted"
@@ -105,7 +164,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <section className="mb-8 grid gap-4 md:grid-cols-3">
+          <section className="mb-8 grid gap-4 md:grid-cols-3 xl:grid-cols-6">
             <div className="rounded-xl border border-muted bg-white p-6 shadow-sm">
               <p className="text-sm text-foreground/60">Total Scans</p>
               <p className="mt-3 text-3xl font-bold text-foreground">{stats.totalScans}</p>
@@ -118,6 +177,22 @@ export default function DashboardPage() {
               <p className="text-sm text-foreground/60">Suspicious</p>
               <p className="mt-3 text-3xl font-bold text-yellow-600">{stats.suspiciousCount}</p>
             </div>
+            {isAdmin ? (
+              <>
+                <div className="rounded-xl border border-muted bg-white p-6 shadow-sm">
+                  <p className="text-sm text-foreground/60">Safe</p>
+                  <p className="mt-3 text-3xl font-bold text-emerald-600">{stats.safeCount}</p>
+                </div>
+                <div className="rounded-xl border border-muted bg-white p-6 shadow-sm">
+                  <p className="text-sm text-foreground/60">Users</p>
+                  <p className="mt-3 text-3xl font-bold text-foreground">{stats.totalUsers}</p>
+                </div>
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-6 shadow-sm">
+                  <p className="text-sm text-primary/80">Admin Accounts</p>
+                  <p className="mt-3 text-3xl font-bold text-primary">{stats.adminUsers}</p>
+                </div>
+              </>
+            ) : null}
           </section>
 
           <section className="mb-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
@@ -159,7 +234,29 @@ export default function DashboardPage() {
           ) : null}
 
           <section className="rounded-xl border border-muted bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-xl font-semibold text-foreground">Recent Scan Results</h2>
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className="text-xl font-semibold text-foreground">
+                {isAdmin ? 'All Scan Results' : 'Recent Scan Results'}
+              </h2>
+              {isAdmin ? (
+                <div className="flex items-center gap-2">
+                  <label htmlFor="statusFilter" className="text-sm font-medium text-foreground/70">
+                    Filter
+                  </label>
+                  <select
+                    id="statusFilter"
+                    value={statusFilter}
+                    onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
+                    className="rounded-md border border-muted bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="All">All</option>
+                    <option value="Safe">Safe</option>
+                    <option value="Suspicious">Suspicious</option>
+                    <option value="Phishing">Phishing</option>
+                  </select>
+                </div>
+              ) : null}
+            </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-muted text-sm">
                 <thead className="bg-muted/40">
@@ -178,14 +275,14 @@ export default function DashboardPage() {
                         Loading scan results...
                       </td>
                     </tr>
-                  ) : scanHistory.length === 0 ? (
+                  ) : filteredScanHistory.length === 0 ? (
                     <tr>
                       <td className="px-4 py-4 text-foreground/60" colSpan={5}>
                         No scans yet. Try analyzing an email or URL above.
                       </td>
                     </tr>
                   ) : (
-                    scanHistory.map((item) => (
+                    filteredScanHistory.map((item) => (
                       <tr key={item.id} className="hover:bg-muted/20">
                         <td className="max-w-xs truncate px-4 py-3 text-foreground/80">{item.email || '-'}</td>
                         <td className="max-w-xs truncate px-4 py-3 text-foreground/80">{item.url || '-'}</td>
@@ -217,6 +314,62 @@ export default function DashboardPage() {
               </table>
             </div>
           </section>
+
+          {isAdmin ? (
+            <section className="mt-8 rounded-xl border border-muted bg-white p-6 shadow-sm">
+              <h2 className="mb-4 text-xl font-semibold text-foreground">User Management</h2>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-muted text-sm">
+                  <thead className="bg-muted/40">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-semibold text-foreground">Email</th>
+                      <th className="px-4 py-3 text-left font-semibold text-foreground">Role</th>
+                      <th className="px-4 py-3 text-left font-semibold text-foreground">Created</th>
+                      <th className="px-4 py-3 text-left font-semibold text-foreground">Updated</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-muted">
+                    {isUsersLoading ? (
+                      <tr>
+                        <td className="px-4 py-4 text-foreground/60" colSpan={4}>
+                          Loading users...
+                        </td>
+                      </tr>
+                    ) : users.length === 0 ? (
+                      <tr>
+                        <td className="px-4 py-4 text-foreground/60" colSpan={4}>
+                          No users found.
+                        </td>
+                      </tr>
+                    ) : (
+                      users.map((account) => (
+                        <tr key={account.id} className="hover:bg-muted/20">
+                          <td className="px-4 py-3 text-foreground/80">{account.email || '-'}</td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                account.role === 'admin'
+                                  ? 'bg-primary/15 text-primary'
+                                  : 'bg-muted text-foreground/80'
+                              }`}
+                            >
+                              {account.role || 'user'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-foreground/70">
+                            {account.created_at ? new Date(account.created_at).toLocaleString() : '-'}
+                          </td>
+                          <td className="px-4 py-3 text-foreground/70">
+                            {account.updated_at ? new Date(account.updated_at).toLocaleString() : '-'}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          ) : null}
         </div>
       </main>
     </ProtectedRoute>

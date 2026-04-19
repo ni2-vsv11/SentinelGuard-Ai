@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/SentinelGuard-Ai.iml" filepath="$PROJECT_DIR$/.idea/SentinelGuard-Ai.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/SentinelGuard-Ai-main.iml" filepath="$PROJECT_DIR$/.idea/SentinelGuard-Ai-main.iml" />
     </modules>
   </component>
 </project>

@@ -11,7 +11,8 @@ type DetectionFormProps = {
   embedded?: boolean
 }
 
-const API_ENDPOINT = `${API_BASE_URL}/analyze`
+const API_ENDPOINT = '/api/analyze'
+const SAVE_SCAN_ENDPOINT = `${API_BASE_URL}/scan-results`
 
 function getProbability(result: AnalyzeApiResponse | null): number | null {
   if (!result) {
@@ -63,7 +64,7 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
   }, [result])
 
   const explanationText = useMemo(() => {
-    return getTextValue(result, ['message', 'details', 'explanation'])
+    return getTextValue(result, ['ai_explanation', 'message', 'details', 'explanation'])
   }, [result])
 
   const isSuspicious = useMemo(() => {
@@ -125,14 +126,31 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
       }
 
       setResult(responseData)
+      const authHeaders = getAuthHeader()
+
+      // Persist successful scan so dashboard history can show recent entries.
+      if (Object.keys(authHeaders).length > 0) {
+        await fetch(SAVE_SCAN_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...authHeaders,
+          },
+          body: JSON.stringify({
+            email: emailText,
+            url: urlText,
+            result: responseData,
+          }),
+        })
+      }
 
       window.dispatchEvent(new CustomEvent('scanCompleted', { detail: responseData }))
     } catch (error) {
-      setErrorMessage(
+      const message =
         error instanceof Error
           ? error.message
           : 'Unable to analyze this input right now. Please try again.'
-      )
+      setErrorMessage(message)
     } finally {
       setIsLoading(false)
     }
@@ -212,7 +230,7 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
                     <span className="text-lg font-bold text-foreground">{Math.round(probability)}% Probability</span>
                   ) : null}
                 </div>
-                <p className="mt-2 text-sm text-foreground/70">
+                <p className="mt-2 whitespace-pre-line text-sm text-foreground/70">
                   {explanationText ||
                     (isSuspicious
                       ? 'Potential phishing attempt detected based on backend analysis.'

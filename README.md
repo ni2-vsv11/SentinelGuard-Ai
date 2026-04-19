@@ -134,7 +134,9 @@ Test credentials (after signup):
 - Email: any valid email
 - Password: minimum 6 characters
 
-
+Admin account:
+- Email: admin@sentinelguard.ai
+- Password: any 6+ character password
 
 ## Future Enhancements
 
@@ -153,6 +155,10 @@ Test credentials (after signup):
 2. Make changes
 3. Test locally
 4. Submit PR
+
+## Contributors
+
+- [@VARUN003733](https://github.com/VARUN003733)
 
 ## License
 

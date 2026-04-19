@@ -1,0 +1,81 @@
+
+> sentinelguard-ai@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.9:3000
+✓ Ready in 517ms
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+Creating turbopack project { dir: 'D:\\SentinelGuard-Ai-main', testMode: true }
+
+ GET / 200 in 3.1s (next.js: 2.8s, application-code: 231ms)
+ GET / 200 in 163ms (next.js: 14ms, application-code: 150ms)
+ GET /login 200 in 602ms (next.js: 552ms, application-code: 50ms)
+ GET /signup 200 in 566ms (next.js: 506ms, application-code: 61ms)
+ GET /login 200 in 58ms (next.js: 10ms, application-code: 48ms)
+ GET /dashboard 200 in 679ms (next.js: 498ms, proxy.ts: 140ms, application-code: 41ms)
+✓ Compiled in 262ms
+ GET /dashboard 200 in 398ms (next.js: 174ms, proxy.ts: 54ms, application-code: 170ms)
+ GET /dashboard 200 in 180ms (next.js: 12ms, proxy.ts: 13ms, application-code: 155ms)
+ GET /dashboard 200 in 114ms (next.js: 56ms, proxy.ts: 17ms, application-code: 42ms)
+ GET /dashboard 200 in 119ms (next.js: 24ms, proxy.ts: 10ms, application-code: 86ms)
+✓ Compiled in 309ms
+ GET /dashboard 200 in 264ms (next.js: 118ms, proxy.ts: 22ms, application-code: 124ms)
+ GET /dashboard 200 in 54ms (next.js: 7ms, proxy.ts: 5ms, application-code: 42ms)
+ GET /dashboard 200 in 213ms (next.js: 6ms, proxy.ts: 10ms, application-code: 197ms)
+ GET / 200 in 881ms (next.js: 471ms, application-code: 410ms)
+ GET /login 200 in 266ms (next.js: 183ms, application-code: 83ms)
+ GET /dashboard 200 in 45ms (next.js: 11ms, proxy.ts: 9ms, application-code: 25ms)
+✓ Compiled in 551ms
+ GET /dashboard 200 in 742ms (next.js: 223ms, proxy.ts: 299ms, application-code: 220ms)
+ GET /dashboard 200 in 154ms (next.js: 11ms, proxy.ts: 7ms, application-code: 135ms)
+ GET /dashboard 200 in 103ms (next.js: 12ms, proxy.ts: 8ms, application-code: 83ms)
+ GET /dashboard 200 in 102ms (next.js: 47ms, proxy.ts: 8ms, application-code: 46ms)
+ GET /dashboard 200 in 810ms (next.js: 96ms, proxy.ts: 202ms, application-code: 511ms)
+ GET /dashboard 200 in 249ms (next.js: 15ms, proxy.ts: 40ms, application-code: 193ms)
+ GET /dashboard 200 in 935ms (next.js: 369ms, proxy.ts: 58ms, application-code: 509ms)
+ GET /dashboard 200 in 502ms (next.js: 8ms, proxy.ts: 8ms, application-code: 486ms)
+ GET /dashboard 200 in 462ms (next.js: 30ms, proxy.ts: 16ms, application-code: 417ms)
+ GET /dashboard 200 in 471ms (next.js: 103ms, proxy.ts: 16ms, application-code: 351ms)
+ GET /dashboard 200 in 468ms (next.js: 218ms, proxy.ts: 19ms, application-code: 231ms)
+ GET /dashboard 200 in 468ms (next.js: 262ms, proxy.ts: 20ms, application-code: 186ms)
+ GET /dashboard 200 in 544ms (next.js: 22ms, proxy.ts: 8ms, application-code: 514ms)
+ GET /dashboard 200 in 544ms (next.js: 24ms, proxy.ts: 11ms, application-code: 509ms)
+ GET /dashboard 200 in 476ms (next.js: 55ms, proxy.ts: 22ms, application-code: 399ms)
+ GET /dashboard 200 in 483ms (next.js: 170ms, proxy.ts: 21ms, application-code: 292ms)
+ GET /dashboard 200 in 474ms (next.js: 210ms, proxy.ts: 36ms, application-code: 228ms)
+ GET /dashboard 200 in 485ms (next.js: 117ms, proxy.ts: 21ms, application-code: 348ms)
+ GET /dashboard 200 in 180ms (next.js: 14ms, proxy.ts: 7ms, application-code: 160ms)
+ GET /dashboard 200 in 104ms (next.js: 24ms, proxy.ts: 7ms, application-code: 73ms)
+✓ Compiled in 311ms
+ GET /dashboard 200 in 411ms (next.js: 251ms, proxy.ts: 28ms, application-code: 132ms)
+ GET /dashboard 200 in 54ms (next.js: 8ms, proxy.ts: 7ms, application-code: 39ms)
+ POST /api/analyze 401 in 1108ms (next.js: 1007ms, application-code: 101ms)
+ POST /api/analyze 500 in 72ms (next.js: 11ms, application-code: 61ms)
+ POST /api/analyze 200 in 60ms (next.js: 16ms, application-code: 44ms)
+✓ Compiled in 341ms
+ GET /dashboard 200 in 459ms (next.js: 221ms, proxy.ts: 59ms, application-code: 180ms)
+ GET /dashboard 200 in 69ms (next.js: 7ms, proxy.ts: 11ms, application-code: 51ms)
+ GET /dashboard 200 in 387ms (next.js: 6ms, proxy.ts: 10ms, application-code: 371ms)
+ POST /api/analyze 200 in 133ms (next.js: 75ms, application-code: 58ms)
+ GET /dashboard 200 in 32ms (next.js: 8ms, proxy.ts: 8ms, application-code: 16ms)
+ GET / 200 in 180ms (next.js: 133ms, application-code: 47ms)
+ GET /login 200 in 182ms (next.js: 128ms, application-code: 55ms)
+ GET /dashboard 200 in 46ms (next.js: 6ms, proxy.ts: 7ms, application-code: 33ms)
+ GET / 200 in 37ms (next.js: 7ms, application-code: 30ms)
+ POST /api/analyze 200 in 41ms (next.js: 7ms, application-code: 33ms)
+ GET / 200 in 663ms (next.js: 60ms, application-code: 603ms)
+ POST /api/analyze 502 in 21ms (next.js: 5ms, application-code: 16ms)
+ POST /api/analyze 401 in 38ms (next.js: 10ms, application-code: 28ms)
+ POST /api/analyze 401 in 36ms (next.js: 6ms, application-code: 31ms)
+ GET / 200 in 138ms (next.js: 8ms, application-code: 130ms)
+ POST /api/analyze 401 in 40ms (next.js: 7ms, application-code: 33ms)
+ GET /login 200 in 56ms (next.js: 11ms, application-code: 46ms)
+ GET /login 200 in 86ms (next.js: 11ms, application-code: 75ms)
+ GET /dashboard 200 in 109ms (next.js: 17ms, proxy.ts: 15ms, application-code: 78ms)
+ POST /api/analyze 200 in 42ms (next.js: 5ms, application-code: 37ms)

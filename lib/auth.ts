@@ -3,7 +3,66 @@ export type AuthUser = {
   role: string
 }
 
-export const API_BASE_URL = 'http://localhost:5000'
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '::1'])
+
+function normalizeApiBaseUrl(value: string): string {
+  return value.endsWith('/') ? value.slice(0, -1) : value
+}
+
+function buildRuntimeDefaultApiBaseUrl(): string {
+  const protocol = window.location.protocol
+  const hostname = LOOPBACK_HOSTS.has(window.location.hostname)
+    ? '127.0.0.1'
+    : window.location.hostname
+
+  return `${protocol}//${hostname}:5000`
+}
+
+function resolveDefaultApiBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    return buildRuntimeDefaultApiBaseUrl()
+  }
+
+  return 'http://localhost:5000'
+}
+
+function resolveApiBaseUrl(): string {
+  const configured = process.env.NEXT_PUBLIC_API_BASE_URL?.trim()
+
+  if (typeof window === 'undefined') {
+    return normalizeApiBaseUrl(configured || resolveDefaultApiBaseUrl())
+  }
+
+  if (!configured) {
+    return normalizeApiBaseUrl(buildRuntimeDefaultApiBaseUrl())
+  }
+
+  try {
+    const parsed = new URL(configured)
+
+    // If frontend is opened from LAN but env is locked to localhost,
+    // redirect API calls to the same host on port 5000.
+    if (
+      LOOPBACK_HOSTS.has(parsed.hostname) &&
+      !LOOPBACK_HOSTS.has(window.location.hostname)
+    ) {
+      return normalizeApiBaseUrl(
+        `${window.location.protocol}//${window.location.hostname}:${parsed.port || '5000'}`
+      )
+    }
+
+    if (parsed.hostname === 'localhost') {
+      parsed.hostname = '127.0.0.1'
+      return normalizeApiBaseUrl(parsed.toString())
+    }
+  } catch {
+    return normalizeApiBaseUrl(buildRuntimeDefaultApiBaseUrl())
+  }
+
+  return normalizeApiBaseUrl(configured)
+}
+
+export const API_BASE_URL = resolveApiBaseUrl()
 
 const TOKEN_KEY = 'auth_token'
 const USER_KEY = 'auth_user'

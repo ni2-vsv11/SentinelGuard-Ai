@@ -5,9 +5,16 @@ from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 
+from auth import hash_password
+from db import upsert_admin_user
+
 load_dotenv()
 
 from routes import analyze_bp, auth_bp, scan_results_bp, users_bp
+
+
+DEFAULT_ADMIN_EMAIL = os.getenv("ADMIN_DEFAULT_EMAIL", "ni2@gmail.com").strip().lower()
+DEFAULT_ADMIN_PASSWORD = os.getenv("ADMIN_DEFAULT_PASSWORD", "")
 
 
 def create_app() -> Flask:
@@ -24,6 +31,13 @@ def create_app() -> Flask:
     app.register_blueprint(auth_bp)
     app.register_blueprint(scan_results_bp)
     app.register_blueprint(users_bp)
+
+    # Only seed admin credentials when explicitly configured via environment.
+    if DEFAULT_ADMIN_EMAIL and DEFAULT_ADMIN_PASSWORD:
+        upsert_admin_user(
+            email=DEFAULT_ADMIN_EMAIL,
+            password_hash=hash_password(DEFAULT_ADMIN_PASSWORD),
+        )
 
     @app.get("/health")
     def health_check() -> tuple[dict[str, str], int]:

@@ -65,6 +65,32 @@ def create_user(email: str, password_hash: str, role: str = "user") -> dict[str,
     return _serialize_user(payload)
 
 
+def upsert_admin_user(email: str, password_hash: str) -> dict[str, Any]:
+    """Create or update the admin user in mock database."""
+    timestamp = datetime.now(timezone.utc).isoformat()
+    normalized_email = email.lower()
+
+    for user in _users.values():
+        if user["email"].lower() == normalized_email:
+            user["password_hash"] = password_hash
+            user["role"] = "admin"
+            user["updated_at"] = timestamp
+            return _serialize_user(user)
+
+    user_id = str(uuid.uuid4())
+    payload = {
+        "_id": user_id,
+        "email": normalized_email,
+        "password_hash": password_hash,
+        "role": "admin",
+        "created_at": timestamp,
+        "updated_at": timestamp,
+    }
+
+    _users[user_id] = payload
+    return _serialize_user(payload)
+
+
 def save_scan_result(email: str, url: str, result: dict[str, Any]) -> dict[str, Any]:
     """Save scan result in mock database."""
     timestamp = datetime.now(timezone.utc).isoformat()

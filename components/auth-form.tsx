@@ -29,6 +29,31 @@ export function AuthForm({ mode }: AuthFormProps) {
 
   const isLogin = mode === 'login'
 
+  const authenticate = async (endpoint: '/auth/login' | '/auth/signup') => {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: email.trim().toLowerCase(),
+        password,
+      }),
+    })
+
+    const payload = (await response.json()) as {
+      token?: string
+      message?: string
+      user?: { email?: string; role?: string }
+    }
+
+    if (!response.ok) {
+      throw new Error(payload.message || 'Authentication request failed.')
+    }
+
+    return payload
+  }
+
   const validateForm = () => {
     const nextErrors: FormErrors = {}
 
@@ -59,40 +84,21 @@ export function AuthForm({ mode }: AuthFormProps) {
     setIsSubmitting(true)
 
     try {
-      const endpoint = isLogin ? '/auth/login' : '/auth/signup'
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email.trim().toLowerCase(),
-          password,
-        }),
-      })
+      const normalizedEmail = email.trim().toLowerCase()
+      const loginPayload = isLogin
+        ? await authenticate('/auth/login')
+        : (() => {
+            return authenticate('/auth/signup').then(() => authenticate('/auth/login'))
+          })()
 
-      const payload = (await response.json()) as {
-        token?: string
-        message?: string
-        user?: { email?: string; role?: string }
-      }
-
-      if (!response.ok) {
-        throw new Error(payload.message || 'Authentication request failed.')
-      }
-
-      if (!isLogin) {
-        router.push('/login')
-        return
-      }
-
-      if (!payload.token) {
+      if (!loginPayload.token) {
         throw new Error('Login succeeded but token was not returned.')
       }
 
       clearAuthStorage()
-      storeAuthSession(payload.token, payload.user?.email || email)
+      storeAuthSession(loginPayload.token, loginPayload.user?.email || normalizedEmail)
       router.push('/dashboard')
+      router.refresh()
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'Unable to authenticate at this time.')
     } finally {

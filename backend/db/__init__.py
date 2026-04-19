@@ -12,6 +12,7 @@ if USE_MOCK_DB:
         get_db,
         get_user_by_email,
         save_scan_result,
+        upsert_admin_user,
     )
 else:
     try:
@@ -22,6 +23,7 @@ else:
             get_db,
             get_user_by_email,
             save_scan_result,
+            upsert_admin_user,
         )
     except Exception as e:
         print(f"MongoDB unavailable: {e}. Falling back to mock database.")
@@ -32,6 +34,7 @@ else:
             get_db,
             get_user_by_email,
             save_scan_result,
+            upsert_admin_user,
         )
 
 __all__ = [
@@ -41,4 +44,5 @@ __all__ = [
     "fetch_users",
     "get_user_by_email",
     "create_user",
+    "upsert_admin_user",
 ]

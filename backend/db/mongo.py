@@ -13,6 +13,7 @@ load_dotenv()
 
 MONGO_URI = os.getenv(
     "MONGO_URI",
+    "mongodb://localhost:27017",
 )
 MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "sentinelguard_ai")
 
@@ -80,6 +81,33 @@ def create_user(email: str, password_hash: str, role: str = "user") -> dict[str,
     inserted = db["users"].insert_one(payload)
     payload["_id"] = inserted.inserted_id
     return _serialize_user(payload)
+
+
+def upsert_admin_user(email: str, password_hash: str) -> dict[str, Any]:
+    db = get_db()
+
+    timestamp = datetime.now(timezone.utc).isoformat()
+    db["users"].update_one(
+        {"email": email},
+        {
+            "$set": {
+                "email": email,
+                "password_hash": password_hash,
+                "role": "admin",
+                "updated_at": timestamp,
+            },
+            "$setOnInsert": {
+                "created_at": timestamp,
+            },
+        },
+        upsert=True,
+    )
+
+    user = db["users"].find_one({"email": email})
+    if not user:
+        raise RuntimeError("Failed to upsert admin user.")
+
+    return _serialize_user(user)
 
 
 def save_scan_result(email: str, url: str, result: dict[str, Any]) -> dict[str, Any]:

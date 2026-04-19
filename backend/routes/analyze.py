@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 
-from ml import predict_phishing
+from ml import generate_ai_explanation, predict_phishing
 
 analyze_bp = Blueprint("analyze", __name__)
 
@@ -29,6 +29,12 @@ def analyze_email_and_url():
     result = predict_phishing(email=email, url=url)
     prediction = str(result.get("prediction", "Safe"))
     confidence = float(result.get("confidence", 0))
+    ai_explanation = generate_ai_explanation(
+        email=email,
+        url=url,
+        prediction=prediction,
+        confidence=confidence,
+    )
 
     if prediction == "Phishing" and confidence >= 75:
         status = "Phishing"
@@ -50,6 +56,7 @@ def analyze_email_and_url():
                 "confidence": confidence,
                 "message": message,
                 "prediction": prediction,
+                "ai_explanation": ai_explanation,
             }
         ),
         200,
