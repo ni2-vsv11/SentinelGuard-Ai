@@ -19,7 +19,10 @@ DEFAULT_ADMIN_PASSWORD = os.getenv("ADMIN_DEFAULT_PASSWORD", "")
 
 def create_app() -> Flask:
     app = Flask(__name__)
-    app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "change-this-in-production")
+    jwt_secret = os.getenv("JWT_SECRET_KEY")
+    if not jwt_secret:
+        jwt_secret = os.urandom(32).hex()
+    app.config["JWT_SECRET_KEY"] = jwt_secret
     app.config["JWT_TOKEN_LOCATION"] = ["headers"]
 
     JWTManager(app)
