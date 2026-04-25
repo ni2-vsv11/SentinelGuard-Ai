@@ -65,6 +65,11 @@ python ml/train_model.py
 | **ML Model** | scikit-learn (TF-IDF + Logistic Regression) |
 | **Database** | MongoDB Atlas |
 
+## Project Design
+
+<img width="416" height="1600" alt="WhatsApp Image 2026-04-18 at 7 26 48 AM" src="https://github.com/user-attachments/assets/b5c0fabd-5bb0-47ed-a563-5b7bd6728770" />
+
+
 ## Project Structure
 
 See [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for detailed file organization and API documentation.
