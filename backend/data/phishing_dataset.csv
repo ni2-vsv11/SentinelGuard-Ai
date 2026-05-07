@@ -7,6 +7,22 @@ email,url,label
 "Payment failed. Re-enter card details immediately.","http://secure-payment-confirmation.biz",phishing
 "You won a reward. Claim now by signing in.","http://gift-claim-login-prize.ru",phishing
 "Urgent: Bank account verification required.","http://bank-security-verify-user.com",phishing
+"We detected unusual activity. Confirm your Microsoft 365 password.","http://office365-secure-reset-login.top",phishing
+"Your PayPal session expired. Sign in to restore access.","http://paypal-account-verify-support.xyz",phishing
+"GitHub security notice: validate your repository credentials.","http://github-auth-verify-login.cc",phishing
+"Dropbox file share failed. Re-enter your login to continue.","http://dropbox-file-login-check.info",phishing
+"Your package is waiting. Pay customs fee now.","http://delivery-payment-update.click",phishing
+"Final reminder: tax refund pending. Claim today.","http://refund-claim-tax-fast.top",phishing
+"Shared document requires your Google password to open.","http://google-docs-secure-auth.work",phishing
+"Your Apple ID has been disabled. Unlock immediately.","http://appleid-unlock-confirm.support",phishing
+"Confirm your bank transfer to prevent cancellation.","http://bank-transfer-confirm-now.gq",phishing
+"Review payroll report by logging in here.","http://hr-payroll-login-review.ml",phishing
+"Attached invoice must be paid today to avoid penalties.","http://invoice-payment-resolution.cn",phishing
+"Important: update your mailbox quota using this portal.","http://mailbox-quota-reset-portal.ga",phishing
+"This file is encrypted. Login to download the decoder.","http://secure-doc-viewer-download.rest",phishing
+"Account recovery required after password breach.","http://192.168.12.44/verify/account",phishing
+"Please verify your Slack workspace credentials.","http://slack-auth-team-login.shop",phishing
+"Complete this security check to continue using LinkedIn.","http://linkedin-security-confirm.fit",phishing
 "Please review the project meeting notes.","https://docs.company.com/meeting-notes",safe
 "Weekly newsletter and product updates.","https://newsletter.example.com/issues/12",safe
 "Reminder: Team standup at 10 AM.","https://calendar.company.com/event/standup",safe
@@ -19,3 +35,22 @@ email,url,label
 "Maintenance notice for cloud services.","https://status.cloudhost.com/maintenance",safe
 "Monthly financial report is ready.","https://reports.company.com/finance/monthly",safe
 "Customer support ticket update.","https://support.vendor.com/tickets/8832",safe
+"Open the repository from the official GitHub profile.","https://github.com/ni2-vsv11",safe
+"GitHub documentation for Actions syntax.","https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions",safe
+"Sign in to your Microsoft account from the official portal.","https://login.microsoftonline.com/common/oauth2/v2.0/authorize",safe
+"Review the shared Google Drive document.","https://drive.google.com/file/d/abc123/view",safe
+"Cloudflare status page incident update.","https://www.cloudflarestatus.com/incidents/abc123",safe
+"Download the latest release from GitLab.","https://gitlab.com/gitlab-org/gitlab/-/releases",safe
+"OpenAI API quickstart guide.","https://platform.openai.com/docs/quickstart",safe
+"Slack workspace invitation from your team admin.","https://app.slack.com/client/T123/C456",safe
+"Apple order receipt from the official store.","https://www.apple.com/shop/order/list",safe
+"Amazon package tracking page.","https://www.amazon.com/progress-tracker/package/ref=ppx_yo_dt_b_track_package",safe
+"PayPal activity page for your recent payment.","https://www.paypal.com/myaccount/activity",safe
+"LinkedIn profile update confirmation.","https://www.linkedin.com/feed/update/urn:li:activity:123456789",safe
+"Dropbox shared folder from your design team.","https://www.dropbox.com/scl/fo/shared-folder-example",safe
+"Mozilla account security history page.","https://accounts.firefox.com/settings",safe
+"Project kickoff agenda in Notion.","https://www.notion.so/acme/Project-kickoff-agenda-123456",safe
+"Zoom meeting invite from your manager.","https://zoom.us/j/1234567890",safe
+"Internal Jira ticket for sprint planning.","https://acme.atlassian.net/browse/ENG-204",safe
+"Repository pull request review request.","https://github.com/openai/openai-python/pull/1234",safe
+"Read the changelog for the release.","https://github.blog/changelog/",safe
