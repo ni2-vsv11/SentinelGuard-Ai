@@ -8,6 +8,8 @@ import {
   Clock,
 } from 'lucide-react'
 
+import { BrandLogo } from '@/components/brand-logo'
+
 export function FeaturesSection() {
   const features = [
     {
@@ -40,7 +42,11 @@ export function FeaturesSection() {
   return (
     <section id="features" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 md:py-24">
       <div className="mb-10 flex flex-col items-start justify-between gap-4 md:mb-12 md:flex-row md:items-center">
-        <div className="max-w-2xl">
+        <div className="max-w-2xl space-y-4">
+          <div className="flex items-center gap-3">
+            <BrandLogo className="h-10 w-10 text-primary" />
+            <span className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">SentinelGuard AI</span>
+          </div>
           <h2 className="mb-4 text-3xl font-bold sm:text-4xl">Unmatched Protection Features</h2>
           <p className="text-foreground/60">
             Built for the modern enterprise, designed for human simplicity

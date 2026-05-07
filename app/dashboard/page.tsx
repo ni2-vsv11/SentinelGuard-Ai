@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 
 import { DetectionForm } from '@/components/detection-form'
+import { BrandLogo } from '@/components/brand-logo'
 import { ProtectedRoute } from '@/components/protected-route'
 import { API_BASE_URL, clearAuthStorage, getAuthHeader, getStoredUser } from '@/lib/auth'
 
@@ -132,8 +133,11 @@ export default function DashboardPage() {
       <main className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-12">
         <div className="mx-auto max-w-7xl">
           <div className="mb-10 flex flex-col gap-4 border-b border-muted pb-6 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-semibold text-primary">SentinelGuard AI</p>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <BrandLogo className="h-10 w-10 text-primary" />
+                <p className="text-sm font-semibold text-primary">SentinelGuard AI</p>
+              </div>
               <h1 className="mt-2 text-2xl font-bold text-foreground sm:text-3xl">Dashboard</h1>
               <p className="mt-2 text-sm text-foreground/60">
                 {user?.email

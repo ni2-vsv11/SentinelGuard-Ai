@@ -1,0 +1,23 @@
+'use client'
+
+type BrandLogoProps = {
+  className?: string
+}
+
+export function BrandLogo({ className = 'h-8 w-8' }: BrandLogoProps) {
+  return (
+    <svg
+      viewBox="0 0 512 512"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M256 24L448 120V256C448 372 370 448 256 488C142 448 64 372 64 256V120L256 24Z" fill="currentColor" />
+      <path d="M256 110L352 170L320 198L288 180L256 220L224 180L192 198L160 170L256 110Z" fill="white" />
+      <path d="M176 210L224 234V346L176 318V210Z" fill="white" />
+      <path d="M336 210L288 234V346L336 318V210Z" fill="white" />
+      <path d="M240 234H272V392H240V234Z" fill="white" />
+    </svg>
+  )
+}

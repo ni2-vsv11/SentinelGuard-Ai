@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
+import { BrandLogo } from '@/components/brand-logo'
 import { clearAuthStorage, getStoredUser, syncAuthSessionFromStorage, type AuthUser } from '@/lib/auth'
 
 export function Navbar() {
@@ -32,8 +33,9 @@ export function Navbar() {
     <nav className="sticky top-0 z-50 border-b border-black/10 bg-white/68 backdrop-blur-md backdrop-saturate-150">
       <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-6 md:flex-row md:items-center md:justify-between">
         {/* Logo */}
-        <div className="text-lg font-bold text-foreground sm:text-xl">
-          SentinelGuard AI
+        <div className="flex items-center gap-3 text-lg font-bold text-foreground sm:text-xl">
+          <BrandLogo className="h-9 w-9 text-primary" />
+          <span>SentinelGuard AI</span>
         </div>
 
         {/* Center Menu */}

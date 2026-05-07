@@ -2,6 +2,8 @@
 
 import { Database, Zap, Brain, CheckCircle2, AlertCircle } from 'lucide-react'
 
+import { BrandLogo } from '@/components/brand-logo'
+
 export function DetectionLifecycle() {
   const steps = [
     {
@@ -40,6 +42,9 @@ export function DetectionLifecycle() {
   return (
     <section id="process" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 md:py-24">
       <div className="mb-12 text-center md:mb-16">
+        <div className="mb-4 flex justify-center">
+          <BrandLogo className="h-10 w-10 text-primary" />
+        </div>
         <h2 className="mb-4 text-3xl font-bold sm:text-4xl">Detection Lifecycle</h2>
         <p className="text-base text-foreground/60 sm:text-lg">
           Our multi-layered analysis pipeline ensures precision security

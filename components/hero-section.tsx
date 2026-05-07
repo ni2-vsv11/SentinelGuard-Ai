@@ -1,12 +1,15 @@
 'use client'
 
+import { BrandLogo } from '@/components/brand-logo'
+
 export function HeroSection() {
   return (
     <section id="home" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 md:py-24">
       <div className="grid items-center gap-10 md:grid-cols-2 md:gap-12">
         {/* Left Side */}
         <div className="space-y-5 text-center md:text-left lg:space-y-6">
-          <div className="inline-block rounded-full border border-black/10 bg-white/68 px-4 py-2 backdrop-blur-sm backdrop-saturate-150">
+          <div className="inline-flex items-center gap-3 rounded-full border border-black/10 bg-white/68 px-4 py-2 backdrop-blur-sm backdrop-saturate-150">
+            <BrandLogo className="h-6 w-6 text-primary" />
             <span className="text-sm font-semibold text-primary">Next-Gen Security</span>
           </div>
 

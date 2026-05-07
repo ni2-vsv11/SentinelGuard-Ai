@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from 'react'
 import { AlertCircle, Globe2, Mail, ShieldAlert, ShieldCheck, Sparkles } from 'lucide-react'
 
+import { BrandLogo } from '@/components/brand-logo'
 import { API_BASE_URL, getAuthHeader } from '@/lib/auth'
 
 type AnalyzeApiResponse = Record<string, unknown>
@@ -214,6 +215,9 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
     <section id="detection" className={containerClassName}>
       {!embedded ? (
         <div className="mb-12 text-center">
+          <div className="mb-4 flex justify-center">
+            <BrandLogo className="h-12 w-12 text-primary" />
+          </div>
           <h2 className="mb-4 text-4xl font-bold">Check Email and URL</h2>
           <p className="text-lg text-foreground/60">
             Paste the message you want reviewed and add the link you want to verify.
