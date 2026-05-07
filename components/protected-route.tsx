@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation'
 import { ReactNode, useEffect, useMemo, useState } from 'react'
 
-import { BrandLogo } from '@/components/brand-logo'
 import { getStoredUser, syncAuthSessionFromStorage } from '@/lib/auth'
 
 type ProtectedRouteProps = {
@@ -41,15 +40,7 @@ export function ProtectedRoute({
   }, [authSnapshot.hasValidSession, authSnapshot.user?.role, fallbackPath, requireRole, router])
 
   if (!isReady) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-background px-6 py-12">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <BrandLogo className="h-14 w-14 text-primary" />
-          <p className="text-sm font-semibold text-primary">SentinelGuard AI</p>
-          <p className="text-sm text-foreground/70">Authorizing access...</p>
-        </div>
-      </main>
-    )
+    return <main className="min-h-screen bg-background px-6 py-12">Authorizing access...</main>
   }
 
   return <>{children}</>

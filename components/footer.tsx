@@ -5,18 +5,18 @@ import { BrandLogo } from '@/components/brand-logo'
 export function Footer() {
   return (
     <footer className="border-t border-black/10 bg-white/62 backdrop-blur-md backdrop-saturate-150">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-        <div className="mb-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12 md:py-16">
+        <div className="mb-8 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
           {/* Brand */}
-          <div>
-            <div className="mb-4 flex items-center gap-3">
+          <div className="text-center sm:text-left">
+            <div className="mb-4 flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:gap-3">
               <BrandLogo className="h-10 w-10 text-primary" />
               <h3 className="text-lg font-bold text-foreground">SentinelGuard AI</h3>
             </div>
-            <p className="text-sm text-foreground/60">
+            <p className="mx-auto max-w-xs text-sm leading-6 text-foreground/60 sm:mx-0">
               Advanced AI-powered phishing detection and cybersecurity protection
             </p>
-            <div className="mt-4">
+            <div className="mt-5 flex justify-center sm:justify-start">
               <a
                 href="https://github.com/ni2-vsv11/SentinelGuard-Ai"
                 target="_blank"
@@ -38,8 +38,8 @@ export function Footer() {
           </div>
 
           {/* Product */}
-          <div>
-            <h4 className="font-semibold text-foreground mb-4">Product</h4>
+          <div className="text-center sm:text-left">
+            <h4 className="mb-4 font-semibold text-foreground">Product</h4>
             <ul className="space-y-2">
               <li>
                 <a href="#" className="text-sm text-foreground/60 hover:text-primary transition">
@@ -60,8 +60,8 @@ export function Footer() {
           </div>
 
           {/* Company */}
-          <div>
-            <h4 className="font-semibold text-foreground mb-4">Company</h4>
+          <div className="text-center sm:text-left">
+            <h4 className="mb-4 font-semibold text-foreground">Company</h4>
             <ul className="space-y-2">
               <li>
                 <a href="#" className="text-sm text-foreground/60 hover:text-primary transition">
@@ -82,8 +82,8 @@ export function Footer() {
           </div>
 
           {/* Legal */}
-          <div>
-            <h4 className="font-semibold text-foreground mb-4">Legal</h4>
+          <div className="text-center sm:text-left">
+            <h4 className="mb-4 font-semibold text-foreground">Legal</h4>
             <ul className="space-y-2">
               <li>
                 <a href="#" className="text-sm text-foreground/60 hover:text-primary transition">
@@ -105,8 +105,8 @@ export function Footer() {
         </div>
 
         {/* Divider */}
-        <div className="border-t border-black/10 pt-8">
-          <p className="text-sm text-foreground/50 text-center">
+        <div className="border-t border-black/10 pt-6 sm:pt-8">
+          <p className="text-center text-xs text-foreground/50 sm:text-sm">
             © 2026 SentinelGuard AI. All rights reserved.
           </p>
         </div>

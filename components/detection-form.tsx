@@ -1,9 +1,9 @@
 'use client'
 
+import Link from 'next/link'
 import { FormEvent, useMemo, useState } from 'react'
 import { AlertCircle, Globe2, Mail, ShieldAlert, ShieldCheck, Sparkles } from 'lucide-react'
 
-import { BrandLogo } from '@/components/brand-logo'
 import { API_BASE_URL, getAuthHeader } from '@/lib/auth'
 
 type AnalyzeApiResponse = Record<string, unknown>
@@ -56,6 +56,7 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
   const [urlText, setUrlText] = useState('')
   const [result, setResult] = useState<AnalyzeApiResponse | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [requiresLogin, setRequiresLogin] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
   const probability = useMemo(() => getProbability(result), [result])
@@ -135,10 +136,18 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
     event.preventDefault()
 
     setErrorMessage(null)
+    setRequiresLogin(false)
     setResult(null)
 
     if (!emailText.trim() && !urlText.trim()) {
       setErrorMessage('Please provide either email text or a URL to analyze.')
+      return
+    }
+
+    const authHeaders = getAuthHeader()
+    if (Object.keys(authHeaders).length === 0) {
+      setRequiresLogin(true)
+      setErrorMessage('Please log in to check an email or URL.')
       return
     }
 
@@ -149,7 +158,7 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeader(),
+          ...authHeaders,
         },
         body: JSON.stringify({
           email: emailText,
@@ -177,7 +186,6 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
       }
 
       setResult(responseData)
-      const authHeaders = getAuthHeader()
 
       // Persist successful scan so dashboard history can show recent entries.
       if (Object.keys(authHeaders).length > 0) {
@@ -194,6 +202,10 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
           }),
         })
       }
+        if (error instanceof Error && error.message === 'Session expired. Please log in again.') {
+          setRequiresLogin(true)
+        }
+
 
       window.dispatchEvent(new CustomEvent('scanCompleted', { detail: responseData }))
     } catch (error) {
@@ -215,9 +227,6 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
     <section id="detection" className={containerClassName}>
       {!embedded ? (
         <div className="mb-12 text-center">
-          <div className="mb-4 flex justify-center">
-            <BrandLogo className="h-12 w-12 text-primary" />
-          </div>
           <h2 className="mb-4 text-4xl font-bold">Check Email and URL</h2>
           <p className="text-lg text-foreground/60">
             Paste the message you want reviewed and add the link you want to verify.
@@ -260,8 +269,25 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
         </button>
 
         {errorMessage ? (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {errorMessage}
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-700 sm:px-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-1">
+                <p className="font-medium leading-6">{errorMessage}</p>
+                {requiresLogin ? (
+                  <p className="text-xs leading-5 text-red-700/80">
+                    Log in on a mobile or desktop browser to analyze email content and URLs.
+                  </p>
+                ) : null}
+              </div>
+              {requiresLogin ? (
+                <Link
+                  href="/login"
+                  className="inline-flex w-full justify-center rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-secondary sm:w-auto"
+                >
+                  Log in
+                </Link>
+              ) : null}
+            </div>
           </div>
         ) : null}
 
