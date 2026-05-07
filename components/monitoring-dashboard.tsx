@@ -57,18 +57,18 @@ export function MonitoringDashboard() {
   }
 
   return (
-    <section className="max-w-7xl mx-auto px-6 py-16 md:py-24">
-      <h2 className="text-4xl font-bold mb-12">Threat Monitoring Dashboard</h2>
+    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 md:py-24">
+      <h2 className="mb-10 text-3xl font-bold sm:mb-12 sm:text-4xl">Threat Monitoring Dashboard</h2>
 
       <div className="glass-panel overflow-x-auto rounded-xl">
-        <table className="w-full">
+        <table className="min-w-[760px] w-full">
           <thead>
             <tr className="border-b border-black/10 bg-white/76">
-              <th className="text-left px-6 py-4 font-semibold text-foreground">ENTITY SOURCE</th>
-              <th className="text-left px-6 py-4 font-semibold text-foreground">TIMESTAMP</th>
-              <th className="text-left px-6 py-4 font-semibold text-foreground">THREAT TYPE</th>
-              <th className="text-left px-6 py-4 font-semibold text-foreground">STATUS</th>
-              <th className="text-left px-6 py-4 font-semibold text-foreground">SCORE</th>
+              <th className="px-4 py-4 text-left font-semibold text-foreground sm:px-6">ENTITY SOURCE</th>
+              <th className="px-4 py-4 text-left font-semibold text-foreground sm:px-6">TIMESTAMP</th>
+              <th className="px-4 py-4 text-left font-semibold text-foreground sm:px-6">THREAT TYPE</th>
+              <th className="px-4 py-4 text-left font-semibold text-foreground sm:px-6">STATUS</th>
+              <th className="px-4 py-4 text-left font-semibold text-foreground sm:px-6">SCORE</th>
             </tr>
           </thead>
           <tbody>
@@ -77,13 +77,13 @@ export function MonitoringDashboard() {
                 key={index}
                 className="border-b border-black/10 transition hover:bg-white/70"
               >
-                <td className="px-6 py-4 text-sm font-mono text-foreground/70">
+                <td className="px-4 py-4 text-sm font-mono text-foreground/70 sm:px-6">
                   {threat.source}
                 </td>
-                <td className="px-6 py-4 text-sm text-foreground/60">{threat.timestamp}</td>
-                <td className="px-6 py-4 text-sm text-foreground">{threat.type}</td>
-                <td className="px-6 py-4">{getStatusBadge(threat.status)}</td>
-                <td className="px-6 py-4 text-sm font-semibold">{threat.score}</td>
+                <td className="px-4 py-4 text-sm text-foreground/60 sm:px-6">{threat.timestamp}</td>
+                <td className="px-4 py-4 text-sm text-foreground sm:px-6">{threat.type}</td>
+                <td className="px-4 py-4 sm:px-6">{getStatusBadge(threat.status)}</td>
+                <td className="px-4 py-4 text-sm font-semibold sm:px-6">{threat.score}</td>
               </tr>
             ))}
           </tbody>

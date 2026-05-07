@@ -30,9 +30,9 @@ export function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 border-b border-black/10 bg-white/68 backdrop-blur-md backdrop-saturate-150">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-6 md:flex-row md:items-center md:justify-between">
         {/* Logo */}
-        <div className="text-xl font-bold text-foreground">
+        <div className="text-lg font-bold text-foreground sm:text-xl">
           SentinelGuard AI
         </div>
 
@@ -56,26 +56,26 @@ export function Navbar() {
         </div>
 
         {/* Right Section */}
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4 md:justify-end">
           {user ? (
             <>
               <Link
                 href="/dashboard"
-                className="text-sm font-medium text-foreground hover:text-primary transition hidden sm:block"
+                className="hidden text-sm font-medium text-foreground transition hover:text-primary sm:block"
               >
                 Dashboard
               </Link>
               <button
                 type="button"
                 onClick={handleLogout}
-                className="rounded-full border border-primary px-6 py-2 text-sm font-semibold text-primary transition hover:bg-muted"
+                className="rounded-full border border-primary px-4 py-2 text-sm font-semibold text-primary transition hover:bg-muted sm:px-6"
               >
                 Logout
               </button>
               {user.role !== 'admin' ? (
                 <Link
                   href="/login?admin=true"
-                  className="text-sm font-medium text-foreground/70 hover:text-primary transition hidden sm:block border-l border-black/10 pl-4"
+                  className="hidden border-l border-black/10 pl-4 text-sm font-medium text-foreground/70 transition hover:text-primary sm:block"
                 >
                   Admin Login
                 </Link>
@@ -83,18 +83,18 @@ export function Navbar() {
             </>
           ) : (
             <>
-              <Link href="/login" className="text-sm font-medium text-foreground hover:text-primary transition hidden sm:block">
+              <Link href="/login" className="hidden text-sm font-medium text-foreground transition hover:text-primary sm:block">
                 Sign In
               </Link>
               <Link
                 href="/signup"
-                className="rounded-full bg-primary px-6 py-2 text-sm font-semibold text-white transition hover:bg-[#39ff14] hover:text-[#04130a] active:bg-[#39ff14] active:text-[#04130a]"
+                className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-secondary sm:px-6"
               >
                 Get Started
               </Link>
               <Link
                 href="/login?admin=true"
-                className="text-sm font-medium text-foreground/70 hover:text-primary transition hidden sm:block border-l border-black/10 pl-4"
+                className="hidden border-l border-black/10 pl-4 text-sm font-medium text-foreground/70 transition hover:text-primary sm:block"
               >
                 Admin Login
               </Link>

@@ -78,9 +78,18 @@ def _extract_email_feature_tokens(email: str) -> list[str]:
     return tokens
 
 
-def _combine_features(email: str, url: str) -> str:
+def _combine_features(email: str, url: str, input_type: str = "both") -> str:
     normalized_email = _clean_text(email)
     normalized_url = _clean_text(url)
+
+    if input_type == "email":
+        feature_tokens = _extract_email_feature_tokens(normalized_email) + ["url_not_provided"]
+        return f"email: {normalized_email} features: {' '.join(feature_tokens)}"
+
+    if input_type == "url":
+        feature_tokens = _extract_url_feature_tokens(normalized_url) + ["email_not_provided"]
+        return f"url: {normalized_url} features: {' '.join(feature_tokens)}"
+
     feature_tokens = _extract_email_feature_tokens(normalized_email) + _extract_url_feature_tokens(normalized_url)
     return f"email: {normalized_email} url: {normalized_url} features: {' '.join(feature_tokens)}"
 
@@ -264,7 +273,7 @@ def _phishing_probability_percent(pipeline: Pipeline, features: list[str]) -> fl
     return probability * 100
 
 
-def predict_phishing(email: str, url: str) -> dict[str, str | float]:
+def predict_phishing(email: str, url: str, input_type: str = "both") -> dict[str, str | float]:
     try:
         pipeline = _get_or_load_cached_model(DEFAULT_MODEL_PATH)
     except Exception as exc:
@@ -273,7 +282,7 @@ def predict_phishing(email: str, url: str) -> dict[str, str | float]:
         train_and_save_model(model_path=DEFAULT_MODEL_PATH)
         pipeline = _get_or_load_cached_model(DEFAULT_MODEL_PATH)
 
-    features = [_combine_features(email=email, url=url)]
+    features = [_combine_features(email=email, url=url, input_type=input_type)]
     phishing_probability = _phishing_probability_percent(pipeline, features)
     prediction = "Phishing" if phishing_probability >= 50 else "Safe"
 

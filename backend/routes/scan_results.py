@@ -5,7 +5,7 @@ from typing import Any
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt, get_jwt_identity, jwt_required
 
-from db import fetch_scan_history, save_scan_result
+from ..db import fetch_scan_history, save_scan_result
 
 scan_results_bp = Blueprint("scan_results", __name__)
 

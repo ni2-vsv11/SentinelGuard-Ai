@@ -85,11 +85,14 @@ export function AuthForm({ mode }: AuthFormProps) {
 
     try {
       const normalizedEmail = email.trim().toLowerCase()
-      const loginPayload = isLogin
-        ? await authenticate('/auth/login')
-        : (() => {
-            return authenticate('/auth/signup').then(() => authenticate('/auth/login'))
-          })()
+      let loginPayload: Awaited<ReturnType<typeof authenticate>>
+
+      if (isLogin) {
+        loginPayload = await authenticate('/auth/login')
+      } else {
+        await authenticate('/auth/signup')
+        loginPayload = await authenticate('/auth/login')
+      }
 
       if (!loginPayload.token) {
         throw new Error('Login succeeded but token was not returned.')

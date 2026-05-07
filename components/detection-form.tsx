@@ -1,7 +1,7 @@
 'use client'
 
 import { FormEvent, useMemo, useState } from 'react'
-import { AlertCircle, CheckCircle } from 'lucide-react'
+import { AlertCircle, Globe2, Mail, ShieldAlert, ShieldCheck, Sparkles } from 'lucide-react'
 
 import { API_BASE_URL, getAuthHeader } from '@/lib/auth'
 
@@ -67,6 +67,31 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
     return getTextValue(result, ['ai_explanation', 'message', 'details', 'explanation'])
   }, [result])
 
+  const confidentiality = useMemo(() => {
+    if (!result) return null
+    const candidates = [result.confidentiality_score, result.confidentialityScore, result.confidence]
+    for (const v of candidates) {
+      if (typeof v === 'number' && Number.isFinite(v)) return v
+    }
+    return null
+  }, [result])
+
+  const siteSummaryText = useMemo(() => {
+    return getTextValue(result, ['site_summary', 'site', 'site_context'])
+  }, [result])
+
+  const emailSummaryText = useMemo(() => {
+    return getTextValue(result, ['email_summary', 'email_risk', 'email_context'])
+  }, [result])
+
+  const recommendationText = useMemo(() => {
+    return getTextValue(result, ['recommendation', 'action', 'next_step'])
+  }, [result])
+
+  const senderText = useMemo(() => {
+    return getTextValue(result, ['identified_sender', 'sender'])
+  }, [result])
+
   const isSuspicious = useMemo(() => {
     if (typeof probability === 'number') {
       return probability >= 50
@@ -79,6 +104,31 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
 
     return false
   }, [probability, riskText])
+
+  const verdictLabel = riskText || (isSuspicious ? 'Suspicious' : 'Safe')
+  const verdictTone = isSuspicious
+    ? {
+        card: 'border-red-200 bg-gradient-to-br from-red-50 via-white to-rose-50/80',
+        accent: 'bg-red-100 text-red-700 ring-red-200',
+        icon: ShieldAlert,
+        bar: 'bg-red-500',
+        shadow: 'shadow-[0_18px_50px_-24px_rgba(239,68,68,0.45)]',
+      }
+    : {
+        card: 'border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-cyan-50/70',
+        accent: 'bg-emerald-100 text-emerald-700 ring-emerald-200',
+        icon: ShieldCheck,
+        bar: 'bg-emerald-500',
+        shadow: 'shadow-[0_18px_50px_-24px_rgba(16,185,129,0.45)]',
+      }
+
+  const VerdictIcon = verdictTone.icon
+  const inputSummary =
+    emailText.trim() && urlText.trim()
+      ? 'Email and URL'
+      : emailText.trim()
+        ? 'Email only'
+        : 'URL only'
 
   const handleAnalyze = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -212,33 +262,129 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
         ) : null}
 
         {result && (
-          <div className={`rounded-xl border-l-4 p-6 ${isSuspicious ? 'border-red-400 bg-red-500/10' : 'border-emerald-400 bg-emerald-500/10'}`}>
-            <div className="flex items-start gap-4">
-              <div className="mt-1">
-                {isSuspicious ? (
-                  <AlertCircle size={24} className="text-red-500" />
-                ) : (
-                  <CheckCircle size={24} className="text-green-500" />
-                )}
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className={`rounded-full px-3 py-1 text-sm font-semibold ${isSuspicious ? 'bg-red-200 text-red-700' : 'bg-green-200 text-green-700'}`}>
-                    {riskText || (isSuspicious ? 'Suspicious' : 'Safe')}
-                  </span>
-                  {typeof probability === 'number' ? (
-                    <span className="text-lg font-bold text-foreground">{Math.round(probability)}% Probability</span>
-                  ) : null}
+          <div className={`w-full max-w-full overflow-hidden rounded-2xl border ${verdictTone.card} ${verdictTone.shadow}`}>
+            <div className={`h-1 w-full ${verdictTone.bar}`} />
+            <div className="min-w-0 p-6 md:p-7">
+              <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                <div className="min-w-0 flex-1 space-y-4">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold ring-1 ${verdictTone.accent}`}>
+                      <VerdictIcon size={16} />
+                      {verdictLabel}
+                    </span>
+                    {typeof probability === 'number' ? (
+                      <span className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white px-3 py-1 text-sm font-semibold text-foreground shadow-sm">
+                        <Sparkles size={14} className="text-primary" />
+                        {Math.round(probability)}% confidence
+                      </span>
+                    ) : null}
+                    {typeof confidentiality === 'number' ? (
+                      <span className="rounded-full border border-black/5 bg-white px-3 py-1 text-sm font-medium text-foreground/75 shadow-sm">
+                        Confidentiality {Math.round(confidentiality)}%
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <div>
+                    <h3 className="text-xl font-semibold text-foreground md:text-2xl">
+                      {isSuspicious ? 'Potential phishing indicators were found.' : 'The submitted content looks low risk.'}
+                    </h3>
+                    <p className="mt-2 max-w-3xl break-words text-sm leading-6 text-foreground/70 md:text-base">
+                      {explanationText || (isSuspicious ? 'Potential phishing attempt detected based on backend analysis.' : 'This content appears legitimate according to backend analysis.')}
+                    </p>
+                  </div>
+
+                  <div className="grid gap-3 md:hidden">
+                    <div className="rounded-2xl border border-black/5 bg-white/95 p-4 shadow-sm">
+                      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-foreground/45">
+                        <Mail size={14} />
+                        Sender
+                      </div>
+                      <p className="mt-2 break-words text-sm font-semibold leading-6 text-foreground">
+                        {senderText || 'Not identified'}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-black/5 bg-white/95 p-4 shadow-sm">
+                      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-foreground/45">
+                        <Globe2 size={14} />
+                        Scope
+                      </div>
+                      <p className="mt-2 break-words text-sm font-semibold leading-6 text-foreground">
+                        {inputSummary}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-black/5 bg-white/95 p-4 shadow-sm">
+                      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-foreground/45">
+                        <AlertCircle size={14} />
+                        Recommendation
+                      </div>
+                      <p className="mt-2 break-words text-sm font-semibold leading-6 text-foreground">
+                        {recommendationText || 'Review carefully before interacting.'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="hidden overflow-hidden rounded-2xl border border-black/5 bg-white/85 shadow-sm md:block">
+                    <div className="grid min-w-[720px] grid-cols-3 divide-x divide-black/5">
+                      <div className="bg-white/95 p-4 md:p-5">
+                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-foreground/45">
+                          <Mail size={14} />
+                          Sender
+                        </div>
+                        <p className="mt-2 line-clamp-2 break-words text-sm font-semibold leading-6 text-foreground md:text-base">
+                          {senderText || 'Not identified'}
+                        </p>
+                      </div>
+
+                      <div className="bg-white/95 p-4 md:p-5">
+                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-foreground/45">
+                          <Globe2 size={14} />
+                          Scope
+                        </div>
+                        <p className="mt-2 line-clamp-2 break-words text-sm font-semibold leading-6 text-foreground md:text-base">
+                          {inputSummary}
+                        </p>
+                      </div>
+
+                      <div className="bg-white/95 p-4 md:p-5">
+                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-foreground/45">
+                          <AlertCircle size={14} />
+                          Recommendation
+                        </div>
+                        <p className="mt-2 line-clamp-2 break-words text-sm font-semibold leading-6 text-foreground md:text-base">
+                          {recommendationText || 'Review carefully before interacting.'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <p className="mt-2 whitespace-pre-line text-sm text-foreground/70">
-                  {explanationText ||
-                    (isSuspicious
-                      ? 'Potential phishing attempt detected based on backend analysis.'
-                      : 'This content appears legitimate according to backend analysis.')}
-                </p>
-                <pre className="mt-4 overflow-x-auto rounded-lg border border-black/10 bg-white/78 p-3 text-xs text-foreground/70">
-                  {JSON.stringify(result, null, 2)}
-                </pre>
+
+                <div className="w-full max-w-sm shrink-0 rounded-2xl border border-black/5 bg-white/90 p-5 shadow-sm lg:max-w-xs">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-foreground/45">Risk Breakdown</p>
+                  <div className="mt-4 space-y-4">
+                    <div>
+                      <div className="mb-2 flex items-center justify-between text-sm">
+                        <span className="font-medium text-foreground/75">Assessment</span>
+                        <span className="font-semibold text-foreground">{verdictLabel}</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-muted">
+                        <div className={`h-2 rounded-full ${verdictTone.bar}`} style={{ width: `${Math.min(Math.max(probability ?? (isSuspicious ? 72 : 28), 8), 100)}%` }} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="mb-2 flex items-center justify-between text-sm">
+                        <span className="font-medium text-foreground/75">Explanation</span>
+                        <span className="font-semibold text-foreground">{isSuspicious ? 'Caution' : 'Clear'}</span>
+                      </div>
+                      <p className="break-words text-sm leading-6 text-foreground/70">
+                        {siteSummaryText || emailSummaryText || 'Detailed reasoning is available in the summary above.'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
