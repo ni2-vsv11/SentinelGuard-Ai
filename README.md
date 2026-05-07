@@ -1,214 +1,154 @@
-# SentinelGuard AI - Phishing Detection System
+# SentinelGuard AI
 
-A full-stack web application that detects phishing emails and malicious URLs using machine learning and AI-powered threat analysis.
+SentinelGuard AI is a modern phishing detection platform that helps users inspect suspicious emails and URLs with AI-assisted analysis, a live dashboard, and role-based access for users and admins.
+
+## Highlights
+
+- Email and URL phishing analysis
+- JWT-based authentication with user and admin flows
+- Personal dashboard with scan history and live stats
+- Admin dashboard for reviewing users and detections
+- MongoDB-backed persistence
+- Next.js frontend with a Flask backend
+- Shared brand logo and app icon throughout the experience
+
+## Preview
+
+- Landing page with a branded hero section, feature blocks, and team section
+- Login and signup pages with shared branding
+- Dashboard and admin views with scan history and role-aware controls
+
+## Tech Stack
+
+| Layer | Stack |
+| --- | --- |
+| Frontend | Next.js, React, TypeScript, Tailwind CSS |
+| Backend | Flask, Python, JWT, bcrypt |
+| Machine Learning | scikit-learn, TF-IDF, Logistic Regression |
+| Database | MongoDB |
 
 ## Quick Start
 
 ### Prerequisites
+
 - Node.js 18+
 - Python 3.9+
-- MongoDB Atlas account
+- MongoDB Atlas or a local MongoDB instance
 
-### 1. Frontend Setup
+### Frontend
+
 ```bash
 npm install
 npm run dev
-# Opens at http://localhost:3000
 ```
 
-### 2. Backend Setup
+Open `http://localhost:3000`.
+
+### Backend
+
 ```bash
 pip install -r requirements.txt
 python -m backend.app
-# Runs at http://localhost:5000
 ```
 
-### 3. Train ML Model (Optional)
+The backend runs on `http://localhost:5000` by default.
+
+### Optional: Train the Model
+
 ```bash
 python -m backend.ml.train_model
 ```
 
-## Features
+## Core Flows
 
-✅ **User Authentication**
-- Secure signup and login with JWT tokens
-- Role-based access control (user/admin)
+### Authentication
 
-✅ **Phishing Detection**
-- Analyze emails and URLs for phishing indicators
-- Machine learning model (scikit-learn)
-- Real-time confidence scoring
+- Sign up for a new account
+- Log in with JWT session support
+- Role-aware access for admin users
 
-✅ **User Dashboard**
-- View personal scan history
-- Live statistics and metrics
-- Auto-refresh after new scans
+### Detection
 
-✅ **Admin Dashboard**
-- View all users and scan results
-- Filter by threat status
-- System analytics
+- Submit email content and/or a URL
+- Receive a phishing verdict with confidence details
+- Save results to scan history when authenticated
 
-✅ **MongoDB Integration**
-- Cloud database with Atlas
-- User management
-- Scan result history
+### Dashboard
 
-## Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| **Frontend** | React, Next.js, TypeScript, Tailwind CSS |
-| **Backend** | Flask, Python, JWT, bcrypt |
-| **ML Model** | scikit-learn (TF-IDF + Logistic Regression) |
-| **Database** | MongoDB Atlas |
+- View recent scans and threat summaries
+- Filter results in the admin view
+- Re-run scans and keep the history current
 
 ## Project Structure
 
-See [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for detailed file organization and API documentation.
+- `app/` - Next.js routes, pages, and layout
+- `components/` - Shared UI components
+- `backend/` - Flask API, ML utilities, and persistence helpers
+- `public/` - Static assets, including the project icon
 
-## Key Endpoints
+For more detail, see [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md).
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/auth/signup` | No | Register new user |
-| POST | `/auth/login` | No | Get JWT token |
-| POST | `/analyze` | Yes | Run phishing detection |
-| GET | `/scan-results/history` | Yes | Fetch user's scan history |
-| GET | `/users` | Yes | List all users (admin) |
+## API Endpoints
+
+| Method | Endpoint | Auth | Purpose |
+| --- | --- | --- | --- |
+| POST | `/auth/signup` | No | Create a new user |
+| POST | `/auth/login` | No | Issue a JWT token |
+| POST | `/analyze` | Yes | Analyze email and URL input |
+| GET | `/scan-results/history` | Yes | Fetch scan history |
+| GET | `/users` | Yes | Fetch users for admin management |
 | GET | `/health` | No | Health check |
 
-## Authentication Flow
+## Environment Variables
 
-```
-User → Signup/Login → Password Hashing → JWT Token → Protected Routes
-```
+Create `backend/.env` with values like:
 
-Token is stored in localStorage and sent with each protected API request.
-
-## Database Schema
-
-**users collection**
-```
-_id, email, password_hash, role, created_at, updated_at
-```
-
-**scan_results collection**
-```
-_id, email, url, result {status, confidence, message}, timestamp
-```
-
-## Development
-
-### Run Frontend Only
 ```bash
-npm run dev
-```
-
-### Run Backend Only
-```bash
-pip install -r requirements.txt
-python -m backend.app
-```
-
-### Build for Production
-```bash
-npm run build
-npm start
-```
-
-## Environment Configuration
-
-Create `backend/.env`:
-```
 MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/?appName=Cluster0
 MONGO_DB_NAME=sentinelguard_ai
 JWT_SECRET_KEY=your-secret-key
 CORS_ORIGINS=http://localhost:3000
 ```
 
-## Testing
+## Development
 
-Test credentials (after signup):
-- Email: any valid email
-- Password: minimum 6 characters
-
-Admin account:
-- Email: admin@sentinelguard.ai
-- Password: any 6+ character password
-
-## Future Enhancements
-
-- [ ] Refresh token rotation
-- [ ] Email verification
-- [ ] Password reset
-- [ ] Enhanced ML model with more training data
-- [ ] Real-time WebSocket notifications
-- [ ] Rate limiting
-- [ ] Audit logging
-- [ ] Production deployment (Vercel + AWS)
-
-## Deployment (updated)
-
-- This repository no longer includes Dockerfiles or docker-compose manifests.
-- Backend is prepared for Render using `render.yaml` and `gunicorn -c backend/gunicorn_config.py backend.wsgi:app`.
-- Frontend is prepared for Vercel using `vercel.json` and `npm run build`.
-
-### Render backend
-
-Create a Render Web Service from this repository and use the existing `render.yaml`, or configure it manually with:
+### Run Frontend Only
 
 ```bash
-Build Command: pip install -r requirements.txt
-Start Command: gunicorn -c backend/gunicorn_config.py backend.wsgi:app
+npm run dev
 ```
 
-Set these environment variables on Render:
+### Run Backend Only
 
 ```bash
-FLASK_ENV=production
-JWT_SECRET_KEY=your-long-random-secret
-MONGO_URI=your-mongodb-atlas-connection-string
-MONGO_DB_NAME=sentinelguard_ai
-CORS_ORIGINS=https://your-frontend.vercel.app
-FRONTEND_URL=https://your-frontend.vercel.app
-ADMIN_DEFAULT_EMAIL=admin@yourdomain.com
-ADMIN_DEFAULT_PASSWORD=your-secure-admin-password
-ADMIN_EMAILS=admin@yourdomain.com
-GROQ_API_KEY=optional
+pip install -r requirements.txt
+python -m backend.app
 ```
 
-Use `/health` as the Render health check path.
-
-### Vercel frontend
-
-Create a Vercel project from this repository and set:
+### Build for Production
 
 ```bash
-NEXT_PUBLIC_API_BASE_URL=https://your-render-service.onrender.com
-API_BASE_URL=https://your-render-service.onrender.com
+npm run build
+npm start
 ```
 
-`NEXT_PUBLIC_API_BASE_URL` is used by browser requests. `API_BASE_URL` is used by the server-side `/api/analyze` route and should usually match the same Render URL.
+## Deployment Notes
 
-### Deployment order
-
-1. Deploy the backend to Render.
-2. Copy the Render service URL.
-3. Add that URL to Vercel as both `NEXT_PUBLIC_API_BASE_URL` and `API_BASE_URL`.
-4. Add the Vercel frontend URL back to Render as `CORS_ORIGINS` and `FRONTEND_URL`.
-5. Redeploy both services once after env vars are set.
-
-## Contributing
-
-1. Create feature branch
-2. Make changes
-3. Test locally
-4. Submit PR
+- Frontend deployment is configured for Vercel via `vercel.json`
+- Backend deployment is configured for Render via `render.yaml`
+- Use `backend/gunicorn_config.py` with `backend.wsgi:app` for production
 
 ## Contributors
 
-- [@VARUN003733](https://github.com/VARUN003733)
+- [ni2-vsv11](https://github.com/ni2-vsv11)
+- [ByteWhizShravani](https://github.com/ByteWhizShravani)
+
+## Contributing
+
+1. Create a feature branch
+2. Make your changes
+3. Test locally
+4. Open a pull request
 
 ## License
 
@@ -216,8 +156,4 @@ MIT
 
 ## Support
 
-For issues or questions, please open an issue in the repository.
-
----
-
-**Built with ❤️ for phishing detection**
+Open an issue in the repository if you run into problems or have a question.

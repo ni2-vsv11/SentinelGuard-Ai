@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { FormEvent, useState } from 'react'
 
+import { BrandLogo } from '@/components/brand-logo'
 import { API_BASE_URL, clearAuthStorage, storeAuthSession } from '@/lib/auth'
 
 type AuthMode = 'login' | 'signup'
@@ -111,8 +112,11 @@ export function AuthForm({ mode }: AuthFormProps) {
 
   return (
     <div className="glass-panel w-full max-w-md rounded-xl p-8">
-      <div className="mb-8 space-y-2">
-        <p className="text-sm font-semibold text-primary">SentinelGuard AI</p>
+      <div className="mb-8 space-y-4">
+        <div className="flex items-center gap-3">
+          <BrandLogo className="h-10 w-10 text-primary" />
+          <p className="text-sm font-semibold text-primary">SentinelGuard AI</p>
+        </div>
         <h1 className="text-3xl font-bold text-foreground">
           {isLogin ? 'Welcome back' : 'Create your account'}
         </h1>

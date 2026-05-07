@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -7,13 +8,16 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from .auth import hash_password
-from .db import get_db, upsert_admin_user
-from .extensions import limiter
-
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")
 
+if not __package__:
+    sys.path.insert(0, str(BASE_DIR.parent))
+    __package__ = "backend"
+
+from .auth import hash_password
+from .db import get_db, upsert_admin_user
+from .extensions import limiter
 from .routes import analyze_bp, auth_bp, scan_results_bp, users_bp
 
 
