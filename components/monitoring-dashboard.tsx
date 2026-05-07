@@ -1,7 +1,5 @@
 'use client'
 
-import { BrandLogo } from '@/components/brand-logo'
-
 export function MonitoringDashboard() {
   const threats = [
     {
@@ -60,10 +58,7 @@ export function MonitoringDashboard() {
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 md:py-24">
-      <div className="mb-10 flex items-center gap-3 sm:mb-12">
-        <BrandLogo className="h-10 w-10 text-primary" />
-        <h2 className="text-3xl font-bold sm:text-4xl">Threat Monitoring Dashboard</h2>
-      </div>
+      <h2 className="mb-10 text-3xl font-bold sm:mb-12 sm:text-4xl">Threat Monitoring Dashboard</h2>
 
       <div className="glass-panel overflow-x-auto rounded-xl">
         <table className="min-w-[760px] w-full">

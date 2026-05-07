@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 
-import { BrandLogo } from '@/components/brand-logo'
 import { ProtectedRoute } from '@/components/protected-route'
 
 export default function AdminDashboardPage() {
@@ -17,9 +16,6 @@ export default function AdminDashboardPage() {
     <ProtectedRoute requireRole="admin">
       <main className="min-h-screen bg-background px-6 py-12">
         <div className="mx-auto max-w-3xl rounded-xl border border-muted bg-white p-8 text-center shadow-sm">
-          <div className="mb-6 flex justify-center">
-            <BrandLogo className="h-14 w-14 text-primary" />
-          </div>
           <p className="text-sm font-semibold text-primary">Admin Route Moved</p>
           <h1 className="mt-2 text-2xl font-bold text-foreground">Use the Main Dashboard</h1>
           <p className="mt-3 text-sm text-foreground/70">

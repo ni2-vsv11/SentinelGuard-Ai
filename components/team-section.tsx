@@ -2,8 +2,6 @@
 
 import { Users } from 'lucide-react'
 
-import { BrandLogo } from '@/components/brand-logo'
-
 export function TeamSection() {
   const teamMembers = [
     {
@@ -29,9 +27,6 @@ export function TeamSection() {
   return (
     <section id="team" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 md:py-24">
       <div className="mb-10 text-center sm:mb-12">
-        <div className="mb-4 flex justify-center">
-          <BrandLogo className="h-10 w-10 text-primary" />
-        </div>
         <h2 className="mb-4 text-3xl font-bold sm:text-4xl">Designed by Team-CodeX</h2>
         <p className="mx-auto max-w-2xl text-base text-foreground/60 sm:text-lg">
           A specialized unit dedicated to pioneering AI-driven cybersecurity solutions at the intersection of machine learning and human creativity
