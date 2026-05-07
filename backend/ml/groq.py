@@ -44,6 +44,35 @@ _EMAIL_THREAT_HINTS = (
 
 _GROQ_MODEL = "llama-3.3-70b-versatile"
 
+_TRUSTED_ROOT_DOMAINS = {
+	"amazon.com",
+	"apple.com",
+	"cloudflare.com",
+	"dropbox.com",
+	"github.com",
+	"gitlab.com",
+	"google.com",
+	"linkedin.com",
+	"microsoft.com",
+	"microsoftonline.com",
+	"mozilla.org",
+	"openai.com",
+	"paypal.com",
+	"slack.com",
+}
+
+_COMPOUND_TLDS = {
+	"ac.in",
+	"ac.uk",
+	"co.in",
+	"co.jp",
+	"co.uk",
+	"com.au",
+	"com.br",
+	"com.mx",
+	"org.uk",
+}
+
 
 def _normalize_input_type(input_type: str | None) -> str:
 	if input_type in {"email", "url", "both"}:
@@ -65,17 +94,42 @@ def _extract_domain(url: str) -> str:
 	return host
 
 
+def _extract_root_domain(host: str) -> str:
+	labels = [label for label in host.split(".") if label]
+	if len(labels) <= 2:
+		return ".".join(labels)
+
+	suffix = ".".join(labels[-2:])
+	if suffix in _COMPOUND_TLDS and len(labels) >= 3:
+		return ".".join(labels[-3:])
+
+	return ".".join(labels[-2:])
+
+
+def _is_trusted_domain(host: str) -> bool:
+	return _extract_root_domain(host) in _TRUSTED_ROOT_DOMAINS
+
+
 def _infer_url_site_type(url: str) -> str:
 	parsed = urlparse(url or "")
+	host = _extract_domain(url)
+	root_domain = _extract_root_domain(host)
 	url_text = f"{parsed.netloc} {parsed.path} {parsed.query}".lower()
 
+	if root_domain == "github.com":
+		if parsed.path.count("/") <= 2:
+			return "an official GitHub profile or repository page"
+		return "an official GitHub page"
+	if _is_trusted_domain(host):
+		return f"an official page on {root_domain}"
+
 	if any(hint in url_text for hint in _FINANCIAL_PATH_HINTS):
-		return "a finance or payment-related page"
+		return "a finance or payment-related page that needs verification"
 	if any(hint in url_text for hint in _LOGIN_PATH_HINTS):
 		return "a login or account-verification page"
 	if "support" in url_text or "help" in url_text:
-		return "a support or help-page impersonation"
-	return "a potentially impersonated web page"
+		return "a support or help page"
+	return "a web page that should be verified"
 
 
 def _infer_email_harm(email: str) -> str:
@@ -115,6 +169,8 @@ def _build_context_summary(
 	url: str,
 	input_type: str,
 	prediction: str,
+	status: str,
+	risk_score: float,
 	confidence: float,
 ) -> dict[str, str]:
 	input_type = _normalize_input_type(input_type)
@@ -122,6 +178,7 @@ def _build_context_summary(
 	site_type = _infer_url_site_type(url)
 	email_present = bool(email)
 	url_present = bool(url)
+	trusted_domain = _is_trusted_domain(domain) if domain else False
 
 	if input_type == "email" and email_present:
 		site_summary = "Site: No URL was provided, so only the email was analyzed."
@@ -132,20 +189,28 @@ def _build_context_summary(
 	else:
 		site_summary = "Site: No URL was provided, so the site type could not be identified."
 
-	harm_summary = (
-		"Harm: This could steal credentials, redirect to a fake login, or expose personal data."
-		if prediction == "Phishing"
-		else "Harm: The current score does not show strong signs of direct harm, but it should still be verified before trusting it."
-	)
+	if status == "Harmful":
+		harm_summary = "Harm: This could steal credentials, redirect to a fake login, or expose personal data."
+	elif status == "Suspicious":
+		harm_summary = "Harm: Some indicators look risky, so the page or message should be verified before any action is taken."
+	else:
+		harm_summary = (
+			"Harm: The current signals look low risk and the domain matches an expected source."
+			if trusted_domain
+			else "Harm: The current score does not show strong signs of direct harm, but normal verification is still a good idea."
+		)
 	if input_type == "url" and not email_present:
 		email_summary = "Email: No email content was provided, so only the URL was analyzed."
 	else:
 		email_summary = f"Email: {_infer_email_harm(email)}"
-	recommendation = (
-		"Action: Do not click the link or reply. Open the real site manually and verify the sender independently."
-		if prediction == "Phishing"
-		else "Action: Verify the sender, inspect the domain, and only continue if the message matches the official source."
-	)
+	if status == "Harmful":
+		recommendation = "Action: Do not click the link or reply. Open the real site manually and verify the sender independently."
+	elif status == "Suspicious":
+		recommendation = "Action: Inspect the sender, double-check the domain, and continue only if the request is expected."
+	elif trusted_domain:
+		recommendation = "Action: The domain matches an official source. Continue only if the page content is what you expected to open."
+	else:
+		recommendation = "Action: The current signals look low risk, but confirm the sender and purpose before trusting it."
 
 	sender = _extract_sender(email)
 	domain_only = domain or "(no domain)"
@@ -157,6 +222,7 @@ def _build_context_summary(
 		"recommendation": recommendation,
 		"identified_sender": sender,
 		"site_domain": domain_only,
+		"risk_score_summary": f"Risk score: {risk_score:.1f}%.",
 	}
 
 
@@ -165,6 +231,8 @@ def _build_fallback_explanation(
 	url: str,
 	input_type: str,
 	prediction: str,
+	status: str,
+	risk_score: float,
 	confidence: float,
 ) -> str:
 	context = _build_context_summary(
@@ -172,6 +240,8 @@ def _build_fallback_explanation(
 		url=url,
 		input_type=input_type,
 		prediction=prediction,
+		status=status,
+		risk_score=risk_score,
 		confidence=confidence,
 	)
 	return "\n".join(
@@ -196,6 +266,8 @@ def _build_prompt(
 	url: str,
 	input_type: str,
 	prediction: str,
+	status: str,
+	risk_score: float,
 	confidence: float,
 	context: dict[str, str],
 ) -> str:
@@ -219,7 +291,7 @@ def _build_prompt(
 		f"Action hint: {context['recommendation']}\n\n"
 		f"Email content:\n{_clean_text(email)[:2000] if email else '(none)'}\n\n"
 		f"URL:\n{_clean_text(url) if url else '(none)'}\n\n"
-		f"ML prediction result:\nPrediction: {prediction}\nConfidence: {confidence:.2f}%"
+		f"Detector result:\nPrediction: {prediction}\nStatus: {status}\nRisk score: {risk_score:.2f}%\nConfidence: {confidence:.2f}%"
 	)
 
 
@@ -235,6 +307,8 @@ def generate_ai_explanation(
 	url: str,
 	input_type: str,
 	prediction: str,
+	status: str,
+	risk_score: float,
 	confidence: float,
 ) -> str:
 	"""Generate a customized human explanation from Groq for phishing analysis results."""
@@ -243,9 +317,11 @@ def generate_ai_explanation(
 		url=url,
 		input_type=input_type,
 		prediction=prediction,
+		status=status,
+		risk_score=risk_score,
 		confidence=confidence,
 	)
-	fallback_explanation = _build_fallback_explanation(email, url, input_type, prediction, confidence)
+	fallback_explanation = _build_fallback_explanation(email, url, input_type, prediction, status, risk_score, confidence)
 
 	try:
 		client = _create_client()
@@ -257,6 +333,8 @@ def generate_ai_explanation(
 		url=url,
 		input_type=input_type,
 		prediction=prediction,
+		status=status,
+		risk_score=risk_score,
 		confidence=confidence,
 		context=context,
 	)
@@ -286,6 +364,8 @@ def build_analysis_context(
 	url: str,
 	input_type: str,
 	prediction: str,
+	status: str,
+	risk_score: float,
 	confidence: float,
 ) -> dict[str, str]:
 	"""Build structured site and email summaries for the UI and API response."""
@@ -294,11 +374,13 @@ def build_analysis_context(
 		url=url,
 		input_type=input_type,
 		prediction=prediction,
+		status=status,
+		risk_score=risk_score,
 		confidence=confidence,
 	)
 	context["prediction_summary"] = (
-		f"Prediction: {prediction} ({confidence:.1f}% confidence)."
-		if prediction in {"Phishing", "Suspicious", "Safe"}
+		f"Prediction: {status} ({risk_score:.1f}% risk, {confidence:.1f}% confidence)."
+		if status in {"Harmful", "Suspicious", "Safe"}
 		else f"Prediction: {prediction}."
 	)
 	return context

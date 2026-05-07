@@ -21,10 +21,13 @@ function getProbability(result: AnalyzeApiResponse | null): number | null {
   }
 
   const candidates = [
+    result.risk_score,
     result.probability,
     result.score,
     result.risk_score,
     result.phishing_probability,
+    result.confidence,
+    result.confidentiality_score,
   ]
 
   for (const value of candidates) {
@@ -95,17 +98,32 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
   }, [result])
 
   const isSuspicious = useMemo(() => {
-    if (typeof probability === 'number') {
-      return probability >= 50
-    }
-
+    // First check the explicit status/risk text from backend (most reliable)
     if (riskText) {
-      const normalized = riskText.toLowerCase()
-      return normalized.includes('suspicious') || normalized.includes('phish') || normalized.includes('malicious')
+      const normalized = riskText.toLowerCase().trim()
+      
+      // Explicitly check for Safe status first
+      if (normalized === 'safe') {
+        return false
+      }
+      
+      // Check for suspicious/threat/harmful indicators
+      if (normalized === 'suspicious' || normalized === 'harmful' || normalized.includes('phishing') || normalized.includes('phish') || normalized.includes('malicious') || normalized.includes('threat')) {
+        return true
+      }
     }
 
+    // If no explicit status, fall back to probability score
+    if (typeof probability === 'number') {
+      // Normalize confidence to 0-100 range if needed
+      const normalizedProb = probability > 1 ? probability : probability * 100
+      // Risk score thresholds match backend classification: 35+ is suspicious, 70+ is harmful
+      return normalizedProb >= 35
+    }
+
+    // Default to safe if no data available
     return false
-  }, [probability, riskText])
+  }, [riskText, probability])
 
   const verdictLabel = riskText || (isSuspicious ? 'Suspicious' : 'Safe')
   const verdictTone = isSuspicious
@@ -221,7 +239,7 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
 
   const containerClassName = embedded
     ? 'space-y-6 rounded-2xl'
-    : 'max-w-4xl mx-auto px-6 py-16'
+    : 'mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:max-w-7xl'
 
   return (
     <section id="detection" className={containerClassName}>
@@ -295,8 +313,8 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
           <div className={`w-full max-w-full overflow-hidden rounded-2xl border ${verdictTone.card} ${verdictTone.shadow}`}>
             <div className={`h-1 w-full ${verdictTone.bar}`} />
             <div className="min-w-0 p-6 md:p-7">
-              <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                <div className="min-w-0 flex-1 space-y-4">
+              <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+                <div className="min-w-0 flex-[1.65] space-y-4 xl:pr-3">
                   <div className="flex flex-wrap items-center gap-3">
                     <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold ring-1 ${verdictTone.accent}`}>
                       <VerdictIcon size={16} />
@@ -305,12 +323,12 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
                     {typeof probability === 'number' ? (
                       <span className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white px-3 py-1 text-sm font-semibold text-foreground shadow-sm">
                         <Sparkles size={14} className="text-primary" />
-                        {Math.round(probability)}% confidence
+                        Risk score {Math.round(probability)}%
                       </span>
                     ) : null}
                     {typeof confidentiality === 'number' ? (
                       <span className="rounded-full border border-black/5 bg-white px-3 py-1 text-sm font-medium text-foreground/75 shadow-sm">
-                        Confidentiality {Math.round(confidentiality)}%
+                        Safety score {Math.round(confidentiality)}%
                       </span>
                     ) : null}
                   </div>
@@ -357,7 +375,7 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
                   </div>
 
                   <div className="hidden overflow-hidden rounded-2xl border border-black/5 bg-white/85 shadow-sm md:block">
-                    <div className="grid min-w-[720px] grid-cols-3 divide-x divide-black/5">
+                    <div className="grid min-w-[760px] grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.6fr)] divide-x divide-black/5">
                       <div className="bg-white/95 p-4 md:p-5">
                         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-foreground/45">
                           <Mail size={14} />
@@ -383,7 +401,7 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
                           <AlertCircle size={14} />
                           Recommendation
                         </div>
-                        <p className="mt-2 line-clamp-2 break-words text-sm font-semibold leading-6 text-foreground md:text-base">
+                        <p className="mt-2 break-words text-sm font-semibold leading-6 text-foreground md:text-base">
                           {recommendationText || 'Review carefully before interacting.'}
                         </p>
                       </div>
@@ -391,7 +409,7 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
                   </div>
                 </div>
 
-                <div className="w-full max-w-sm shrink-0 rounded-2xl border border-black/5 bg-white/90 p-5 shadow-sm lg:max-w-xs">
+                <div className="w-full max-w-sm shrink-0 rounded-2xl border border-black/5 bg-white/90 p-5 shadow-sm xl:max-w-[220px]">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-foreground/45">Risk Breakdown</p>
                   <div className="mt-4 space-y-4">
                     <div>
@@ -413,6 +431,92 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
                         {siteSummaryText || emailSummaryText || 'Detailed reasoning is available in the summary above.'}
                       </p>
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {result && result.separate_analysis && (
+          <div className="w-full space-y-5">
+            <h3 className="text-lg font-semibold text-foreground">Detailed Analysis - Email & URL Breakdown</h3>
+            
+            <div className="grid gap-5 lg:grid-cols-2">
+              {/* Email Analysis */}
+              <div className="overflow-hidden rounded-2xl border border-black/5 bg-white/90 shadow-sm">
+                <div className={`h-1 w-full ${result.separate_analysis.email.status === 'Safe' ? 'bg-emerald-500' : result.separate_analysis.email.status === 'Harmful' ? 'bg-red-600' : 'bg-red-500'}`} />
+                <div className="p-6">
+                  <div className="mb-4 flex items-center gap-3">
+                    <Mail size={20} className={result.separate_analysis.email.status === 'Safe' ? 'text-emerald-600' : 'text-red-600'} />
+                    <div>
+                      <h4 className="text-sm font-semibold uppercase tracking-wide text-foreground/60">Email Analysis</h4>
+                      <p className="mt-1 text-base font-semibold text-foreground">
+                        {result.separate_analysis.email.status}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between rounded-lg bg-black/2 p-3">
+                      <span className="text-sm text-foreground/70">Risk Score</span>
+                      <span className="font-semibold text-foreground">{Math.round(result.separate_analysis.email.risk_score)}%</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg bg-black/2 p-3">
+                      <span className="text-sm text-foreground/70">Safety Score</span>
+                      <span className="font-semibold text-foreground">{Math.round(100 - result.separate_analysis.email.risk_score)}%</span>
+                    </div>
+                    {result.separate_analysis.email.email_summary && (
+                      <div className="rounded-lg bg-black/2 p-3">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60">Summary</p>
+                        <p className="mt-2 break-words text-sm leading-5 text-foreground/80">
+                          {result.separate_analysis.email.email_summary}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* URL Analysis */}
+              <div className="overflow-hidden rounded-2xl border border-black/5 bg-white/90 shadow-sm">
+                <div className={`h-1 w-full ${result.separate_analysis.url.status === 'Safe' ? 'bg-emerald-500' : result.separate_analysis.url.status === 'Harmful' ? 'bg-red-600' : 'bg-red-500'}`} />
+                <div className="p-6">
+                  <div className="mb-4 flex items-center gap-3">
+                    <Globe2 size={20} className={result.separate_analysis.url.status === 'Safe' ? 'text-emerald-600' : 'text-red-600'} />
+                    <div>
+                      <h4 className="text-sm font-semibold uppercase tracking-wide text-foreground/60">URL Analysis</h4>
+                      <p className="mt-1 text-base font-semibold text-foreground">
+                        {result.separate_analysis.url.status}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between rounded-lg bg-black/2 p-3">
+                      <span className="text-sm text-foreground/70">Risk Score</span>
+                      <span className="font-semibold text-foreground">{Math.round(result.separate_analysis.url.risk_score)}%</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg bg-black/2 p-3">
+                      <span className="text-sm text-foreground/70">Safety Score</span>
+                      <span className="font-semibold text-foreground">{Math.round(100 - result.separate_analysis.url.risk_score)}%</span>
+                    </div>
+                    {result.separate_analysis.url.site_domain && (
+                      <div className="rounded-lg bg-black/2 p-3">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60">Domain</p>
+                        <p className="mt-2 break-words text-sm font-mono text-foreground">
+                          {result.separate_analysis.url.site_domain}
+                        </p>
+                      </div>
+                    )}
+                    {result.separate_analysis.url.site_summary && (
+                      <div className="rounded-lg bg-black/2 p-3">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60">Summary</p>
+                        <p className="mt-2 break-words text-sm leading-5 text-foreground/80">
+                          {result.separate_analysis.url.site_summary}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
