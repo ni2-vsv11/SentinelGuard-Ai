@@ -202,13 +202,13 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
           }),
         })
       }
-        if (error instanceof Error && error.message === 'Session expired. Please log in again.') {
-          setRequiresLogin(true)
-        }
-
 
       window.dispatchEvent(new CustomEvent('scanCompleted', { detail: responseData }))
     } catch (error) {
+      if (error instanceof Error && error.message === 'Session expired. Please log in again.') {
+        setRequiresLogin(true)
+      }
+
       const message =
         error instanceof Error
           ? error.message
