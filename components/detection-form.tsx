@@ -6,7 +6,45 @@ import { AlertCircle, Globe2, Mail, ShieldAlert, ShieldCheck, Sparkles } from 'l
 
 import { API_BASE_URL, getAuthHeader } from '@/lib/auth'
 
-type AnalyzeApiResponse = Record<string, unknown>
+type AnalysisSection = {
+  status: string
+  confidence: number
+  risk_score: number
+  prediction?: string
+  email_risk?: number
+  url_risk?: number
+  email_summary?: string
+  site_summary?: string
+  site_domain?: string
+}
+
+type SeparateAnalysis = {
+  email: AnalysisSection
+  url: AnalysisSection
+}
+
+type AnalyzeApiResponse = Record<string, unknown> & {
+  status?: string
+  confidence?: number
+  risk_score?: number
+  confidentiality_score?: number
+  probability?: number
+  score?: number
+  phishing_probability?: number
+  ml_probability?: number
+  heuristic_risk?: number
+  trusted_domain?: boolean
+  url_risk?: number
+  email_risk?: number
+  message?: string
+  ai_explanation?: string
+  site_summary?: string
+  email_summary?: string
+  recommendation?: string
+  identified_sender?: string
+  site_domain?: string
+  separate_analysis?: SeparateAnalysis
+}
 
 type DetectionFormProps = {
   embedded?: boolean
@@ -96,6 +134,8 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
   const senderText = useMemo(() => {
     return getTextValue(result, ['identified_sender', 'sender'])
   }, [result])
+
+  const separateAnalysis = result?.separate_analysis
 
   const isSuspicious = useMemo(() => {
     // First check the explicit status/risk text from backend (most reliable)
@@ -438,21 +478,21 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
           </div>
         )}
 
-        {result && result.separate_analysis && (
+        {separateAnalysis && (
           <div className="w-full space-y-5">
             <h3 className="text-lg font-semibold text-foreground">Detailed Analysis - Email & URL Breakdown</h3>
             
             <div className="grid gap-5 lg:grid-cols-2">
               {/* Email Analysis */}
               <div className="overflow-hidden rounded-2xl border border-black/5 bg-white/90 shadow-sm">
-                <div className={`h-1 w-full ${result.separate_analysis.email.status === 'Safe' ? 'bg-emerald-500' : result.separate_analysis.email.status === 'Harmful' ? 'bg-red-600' : 'bg-red-500'}`} />
+                <div className={`h-1 w-full ${separateAnalysis.email.status === 'Safe' ? 'bg-emerald-500' : separateAnalysis.email.status === 'Harmful' ? 'bg-red-600' : 'bg-red-500'}`} />
                 <div className="p-6">
                   <div className="mb-4 flex items-center gap-3">
-                    <Mail size={20} className={result.separate_analysis.email.status === 'Safe' ? 'text-emerald-600' : 'text-red-600'} />
+                    <Mail size={20} className={separateAnalysis.email.status === 'Safe' ? 'text-emerald-600' : 'text-red-600'} />
                     <div>
                       <h4 className="text-sm font-semibold uppercase tracking-wide text-foreground/60">Email Analysis</h4>
                       <p className="mt-1 text-base font-semibold text-foreground">
-                        {result.separate_analysis.email.status}
+                        {separateAnalysis.email.status}
                       </p>
                     </div>
                   </div>
@@ -460,17 +500,17 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between rounded-lg bg-black/2 p-3">
                       <span className="text-sm text-foreground/70">Risk Score</span>
-                      <span className="font-semibold text-foreground">{Math.round(result.separate_analysis.email.risk_score)}%</span>
+                      <span className="font-semibold text-foreground">{Math.round(separateAnalysis.email.risk_score)}%</span>
                     </div>
                     <div className="flex items-center justify-between rounded-lg bg-black/2 p-3">
                       <span className="text-sm text-foreground/70">Safety Score</span>
-                      <span className="font-semibold text-foreground">{Math.round(100 - result.separate_analysis.email.risk_score)}%</span>
+                      <span className="font-semibold text-foreground">{Math.round(100 - separateAnalysis.email.risk_score)}%</span>
                     </div>
-                    {result.separate_analysis.email.email_summary && (
+                    {separateAnalysis.email.email_summary && (
                       <div className="rounded-lg bg-black/2 p-3">
                         <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60">Summary</p>
                         <p className="mt-2 break-words text-sm leading-5 text-foreground/80">
-                          {result.separate_analysis.email.email_summary}
+                          {separateAnalysis.email.email_summary}
                         </p>
                       </div>
                     )}
@@ -480,14 +520,14 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
 
               {/* URL Analysis */}
               <div className="overflow-hidden rounded-2xl border border-black/5 bg-white/90 shadow-sm">
-                <div className={`h-1 w-full ${result.separate_analysis.url.status === 'Safe' ? 'bg-emerald-500' : result.separate_analysis.url.status === 'Harmful' ? 'bg-red-600' : 'bg-red-500'}`} />
+                <div className={`h-1 w-full ${separateAnalysis.url.status === 'Safe' ? 'bg-emerald-500' : separateAnalysis.url.status === 'Harmful' ? 'bg-red-600' : 'bg-red-500'}`} />
                 <div className="p-6">
                   <div className="mb-4 flex items-center gap-3">
-                    <Globe2 size={20} className={result.separate_analysis.url.status === 'Safe' ? 'text-emerald-600' : 'text-red-600'} />
+                    <Globe2 size={20} className={separateAnalysis.url.status === 'Safe' ? 'text-emerald-600' : 'text-red-600'} />
                     <div>
                       <h4 className="text-sm font-semibold uppercase tracking-wide text-foreground/60">URL Analysis</h4>
                       <p className="mt-1 text-base font-semibold text-foreground">
-                        {result.separate_analysis.url.status}
+                        {separateAnalysis.url.status}
                       </p>
                     </div>
                   </div>
@@ -495,25 +535,25 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between rounded-lg bg-black/2 p-3">
                       <span className="text-sm text-foreground/70">Risk Score</span>
-                      <span className="font-semibold text-foreground">{Math.round(result.separate_analysis.url.risk_score)}%</span>
+                      <span className="font-semibold text-foreground">{Math.round(separateAnalysis.url.risk_score)}%</span>
                     </div>
                     <div className="flex items-center justify-between rounded-lg bg-black/2 p-3">
                       <span className="text-sm text-foreground/70">Safety Score</span>
-                      <span className="font-semibold text-foreground">{Math.round(100 - result.separate_analysis.url.risk_score)}%</span>
+                      <span className="font-semibold text-foreground">{Math.round(100 - separateAnalysis.url.risk_score)}%</span>
                     </div>
-                    {result.separate_analysis.url.site_domain && (
+                    {separateAnalysis.url.site_domain && (
                       <div className="rounded-lg bg-black/2 p-3">
                         <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60">Domain</p>
                         <p className="mt-2 break-words text-sm font-mono text-foreground">
-                          {result.separate_analysis.url.site_domain}
+                          {separateAnalysis.url.site_domain}
                         </p>
                       </div>
                     )}
-                    {result.separate_analysis.url.site_summary && (
+                    {separateAnalysis.url.site_summary && (
                       <div className="rounded-lg bg-black/2 p-3">
                         <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60">Summary</p>
                         <p className="mt-2 break-words text-sm leading-5 text-foreground/80">
-                          {result.separate_analysis.url.site_summary}
+                          {separateAnalysis.url.site_summary}
                         </p>
                       </div>
                     )}
