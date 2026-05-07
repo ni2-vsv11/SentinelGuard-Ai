@@ -7,7 +7,8 @@ function normalizeBaseUrl(value: string): string {
 }
 
 function resolveBackendBaseUrl(request: NextRequest): string {
-  const configured = process.env.NEXT_PUBLIC_API_BASE_URL?.trim()
+  const configured =
+    process.env.API_BASE_URL?.trim() || process.env.NEXT_PUBLIC_API_BASE_URL?.trim()
   if (configured) {
     return normalizeBaseUrl(configured)
   }

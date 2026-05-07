@@ -1,3 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Logs
+logs/
+*.log
+
+# Environment variables
+.env
+.env.*
+.env.local
+
+# Node
+node_modules/
+.next/
+dist/
+build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+
+# Test
+.pytest_cache/
+coverage/
+
+# Misc
+*.sqlite3
+*.db
 # v0 runtime files
 __v0_runtime_loader.js
 __v0_devtools.tsx
@@ -6,7 +46,18 @@ __v0_jsx-dev-runtime.ts
 # Common ignores
 node_modules
 .next/
+.codex
+.venv/
 .env*.local
 .env
+.env.production
 backend/.env
+*.log
+*.err
+*.tsbuildinfo
 .DS_Store
+
+# Python runtime cache
+backend/**/__pycache__/
+backend/**/*.pyc
+screen.png

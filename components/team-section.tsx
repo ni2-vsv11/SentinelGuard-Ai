@@ -6,7 +6,7 @@ export function TeamSection() {
   const teamMembers = [
     {
       name: 'Nitesh Vasave',
-      role: 'AI Developer',
+      role: 'AI Software Developer',
       description: 'Architecting the neural network engine',
     },
     {
@@ -22,19 +22,19 @@ export function TeamSection() {
   ]
 
   return (
-    <section id="team" className="max-w-7xl mx-auto px-6 py-16 md:py-24">
-      <div className="text-center mb-12">
-        <h2 className="text-4xl font-bold mb-4">Designed by Team-CodeX</h2>
-        <p className="text-foreground/60 text-lg max-w-2xl mx-auto">
+    <section id="team" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 md:py-24">
+      <div className="mb-10 text-center sm:mb-12">
+        <h2 className="mb-4 text-3xl font-bold sm:text-4xl">Designed by Team-CodeX</h2>
+        <p className="mx-auto max-w-2xl text-base text-foreground/60 sm:text-lg">
           A specialized unit dedicated to pioneering AI-driven cybersecurity solutions at the intersection of machine learning and human creativity
         </p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-8">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {teamMembers.map((member, index) => (
           <div
             key={index}
-            className="glass-panel rounded-xl p-8 text-center transition hover:border-primary/45"
+            className="glass-panel rounded-xl p-6 text-center transition hover:border-primary/45 sm:p-8"
           >
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-black/10 bg-white/82">
               <Users size={32} className="text-primary" />

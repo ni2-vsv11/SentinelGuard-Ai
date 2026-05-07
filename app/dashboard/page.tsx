@@ -129,12 +129,12 @@ export default function DashboardPage() {
 
   return (
     <ProtectedRoute>
-      <main className="min-h-screen bg-background px-6 py-12">
+      <main className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-12">
         <div className="mx-auto max-w-7xl">
           <div className="mb-10 flex flex-col gap-4 border-b border-muted pb-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-semibold text-primary">SentinelGuard AI</p>
-              <h1 className="mt-2 text-3xl font-bold text-foreground">Dashboard</h1>
+              <h1 className="mt-2 text-2xl font-bold text-foreground sm:text-3xl">Dashboard</h1>
               <p className="mt-2 text-sm text-foreground/60">
                 {user?.email
                   ? `Logged in as ${user.email}${isAdmin ? ' (Admin)' : ''}`
@@ -144,27 +144,27 @@ export default function DashboardPage() {
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={handleRefresh}
-                className="inline-flex rounded-lg border border-muted px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-muted"
+                className="inline-flex rounded-lg border border-muted px-4 py-2.5 text-sm font-semibold text-foreground transition hover:bg-muted sm:px-5 sm:py-3"
               >
                 Refresh
               </button>
               <button
                 type="button"
                 onClick={handleLogout}
-                className="inline-flex rounded-lg border border-primary px-5 py-3 text-sm font-semibold text-primary transition hover:bg-muted"
+                className="inline-flex rounded-lg border border-primary px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-muted sm:px-5 sm:py-3"
               >
                 Logout
               </button>
               <Link
                 href="/"
-                className="inline-flex rounded-lg border border-primary px-5 py-3 text-sm font-semibold text-primary transition hover:bg-muted"
+                className="inline-flex rounded-lg border border-primary px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-muted sm:px-5 sm:py-3"
               >
                 Back to home
               </Link>
             </div>
           </div>
 
-          <section className="mb-8 grid gap-4 md:grid-cols-3 xl:grid-cols-6">
+          <section className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
             <div className="rounded-xl border border-muted bg-white p-6 shadow-sm">
               <p className="text-sm text-foreground/60">Total Scans</p>
               <p className="mt-3 text-3xl font-bold text-foreground">{stats.totalScans}</p>
@@ -196,10 +196,10 @@ export default function DashboardPage() {
           </section>
 
           <section className="mb-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="glass-panel rounded-2xl p-6">
+            <div className="glass-panel rounded-2xl p-5 sm:p-6">
               <p className="text-sm font-semibold text-primary">Quick Check</p>
-              <h2 className="mt-2 text-2xl font-bold text-foreground">Check an email or URL right away</h2>
-              <p className="mt-2 max-w-2xl text-sm text-foreground/60">
+              <h2 className="mt-2 text-xl font-bold text-foreground sm:text-2xl">Check an email or URL right away</h2>
+              <p className="mt-2 max-w-2xl text-sm text-foreground/60 sm:text-base">
                 Paste the email content you want reviewed and drop in the suspicious link. The scanner is ready as soon as you log in.
               </p>
               <div className="mt-6">
@@ -207,9 +207,9 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="glass-panel rounded-2xl p-6">
+            <div className="glass-panel rounded-2xl p-5 sm:p-6">
               <p className="text-sm font-semibold text-primary">Workflow</p>
-              <h2 className="mt-2 text-2xl font-bold text-foreground">Fastest way to verify a threat</h2>
+              <h2 className="mt-2 text-xl font-bold text-foreground sm:text-2xl">Fastest way to verify a threat</h2>
               <div className="mt-6 space-y-4 text-sm text-foreground/70">
                 <div className="rounded-xl border border-muted bg-white/70 p-4">
                   <p className="font-semibold text-foreground">1. Paste email content</p>
@@ -233,9 +233,9 @@ export default function DashboardPage() {
             </div>
           ) : null}
 
-          <section className="rounded-xl border border-muted bg-white p-6 shadow-sm">
+          <section className="rounded-xl border border-muted bg-white p-4 shadow-sm sm:p-6">
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="text-xl font-semibold text-foreground">
+              <h2 className="text-lg font-semibold text-foreground sm:text-xl">
                 {isAdmin ? 'All Scan Results' : 'Recent Scan Results'}
               </h2>
               {isAdmin ? (
@@ -261,11 +261,11 @@ export default function DashboardPage() {
               <table className="min-w-full divide-y divide-muted text-sm">
                 <thead className="bg-muted/40">
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold text-foreground">Email</th>
-                    <th className="px-4 py-3 text-left font-semibold text-foreground">URL</th>
-                    <th className="px-4 py-3 text-left font-semibold text-foreground">Status</th>
-                    <th className="px-4 py-3 text-left font-semibold text-foreground">Confidence</th>
-                    <th className="px-4 py-3 text-left font-semibold text-foreground">Timestamp</th>
+                    <th className="px-4 py-3 text-left font-semibold text-foreground">ENTITY SOURCE</th>
+                    <th className="px-4 py-3 text-left font-semibold text-foreground">TIMESTAMP</th>
+                    <th className="px-4 py-3 text-left font-semibold text-foreground">THREAT TYPE</th>
+                    <th className="px-4 py-3 text-left font-semibold text-foreground">STATUS</th>
+                    <th className="px-4 py-3 text-left font-semibold text-foreground">SCORE</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-muted">
@@ -282,33 +282,44 @@ export default function DashboardPage() {
                       </td>
                     </tr>
                   ) : (
-                    filteredScanHistory.map((item) => (
-                      <tr key={item.id} className="hover:bg-muted/20">
-                        <td className="max-w-xs truncate px-4 py-3 text-foreground/80">{item.email || '-'}</td>
-                        <td className="max-w-xs truncate px-4 py-3 text-foreground/80">{item.url || '-'}</td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                              item.result?.status === 'Phishing'
-                                ? 'bg-red-100 text-red-700'
-                                : item.result?.status === 'Suspicious'
+                    filteredScanHistory.map((item) => {
+                      const entity = item.email || item.url || ((item.result as any)?.identified_sender) || '-'
+
+                      const threatType = (() => {
+                        const url = (item.url || '').toLowerCase()
+                        const email = (item.email || '').toLowerCase()
+                        if (url.endsWith('.exe') || url.includes('.exe')) return 'Credential Harvest'
+                        if (url.includes('admin') || url.includes('portal') || url.includes('confirm')) return 'URL Malicious'
+                        if (email.includes('newsletter') || email.includes('noreply')) return 'Safe Content'
+                        if (item.result?.status === 'Phishing') return 'Phishing'
+                        return item.result?.status || 'Unknown'
+                      })()
+
+                      const statusLabel = item.result?.status || 'Unknown'
+                      const score = typeof item.result?.confidence === 'number' ? `${Math.round(item.result.confidence)}%` : '-'
+
+                      return (
+                        <tr key={item.id} className="hover:bg-muted/20">
+                          <td className="max-w-[220px] truncate px-4 py-3 font-mono text-foreground/80 sm:max-w-xs">{entity}</td>
+                          <td className="px-4 py-3 text-sm text-foreground/70">{item.timestamp ? new Date(item.timestamp).toLocaleString() : '-'}</td>
+                          <td className="px-4 py-3 text-sm text-foreground">{threatType}</td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                statusLabel === 'Phishing'
+                                  ? 'bg-red-100 text-red-700'
+                                  : statusLabel === 'Suspicious'
                                   ? 'bg-yellow-100 text-yellow-700'
                                   : 'bg-green-100 text-green-700'
-                            }`}
-                          >
-                            {item.result?.status || 'Unknown'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-foreground/80">
-                          {typeof item.result?.confidence === 'number'
-                            ? `${Math.round(item.result.confidence)}%`
-                            : '-'}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-foreground/70">
-                          {item.timestamp ? new Date(item.timestamp).toLocaleString() : '-'}
-                        </td>
-                      </tr>
-                    ))
+                              }`}
+                            >
+                              {statusLabel}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm font-semibold">{score}</td>
+                        </tr>
+                      )
+                    })
                   )}
                 </tbody>
               </table>
@@ -316,8 +327,8 @@ export default function DashboardPage() {
           </section>
 
           {isAdmin ? (
-            <section className="mt-8 rounded-xl border border-muted bg-white p-6 shadow-sm">
-              <h2 className="mb-4 text-xl font-semibold text-foreground">User Management</h2>
+            <section className="mt-8 rounded-xl border border-muted bg-white p-4 shadow-sm sm:p-6">
+              <h2 className="mb-4 text-lg font-semibold text-foreground sm:text-xl">User Management</h2>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-muted text-sm">
                   <thead className="bg-muted/40">

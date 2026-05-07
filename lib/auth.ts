@@ -4,6 +4,7 @@ export type AuthUser = {
 }
 
 const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '::1'])
+const LOCAL_API_FALLBACK = 'http://127.0.0.1:5000'
 
 function normalizeApiBaseUrl(value: string): string {
   return value.endsWith('/') ? value.slice(0, -1) : value
@@ -23,7 +24,7 @@ function resolveDefaultApiBaseUrl(): string {
     return buildRuntimeDefaultApiBaseUrl()
   }
 
-  return 'http://localhost:5000'
+  return LOCAL_API_FALLBACK
 }
 
 function resolveApiBaseUrl(): string {

@@ -38,15 +38,15 @@ export function DetectionLifecycle() {
   ]
 
   return (
-    <section id="process" className="max-w-7xl mx-auto px-6 py-16 md:py-24">
-      <div className="text-center mb-16">
-        <h2 className="text-4xl font-bold mb-4">Detection Lifecycle</h2>
-        <p className="text-foreground/60 text-lg">
+    <section id="process" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 md:py-24">
+      <div className="mb-12 text-center md:mb-16">
+        <h2 className="mb-4 text-3xl font-bold sm:text-4xl">Detection Lifecycle</h2>
+        <p className="text-base text-foreground/60 sm:text-lg">
           Our multi-layered analysis pipeline ensures precision security
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 md:gap-0">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 lg:gap-0">
         {steps.map((step, index) => {
           const Icon = step.icon
           return (
@@ -54,7 +54,7 @@ export function DetectionLifecycle() {
               <div
                 className={`p-6 rounded-xl text-center transition ${
                   step.highlight
-                    ? 'glass-panel z-10 scale-105 border-primary/45 md:scale-110'
+                    ? 'glass-panel z-10 border-primary/45 lg:scale-110'
                     : 'glass-panel hover:border-primary/40'
                 }`}
               >
@@ -74,7 +74,7 @@ export function DetectionLifecycle() {
 
               {/* Connector Line */}
               {index < steps.length - 1 && (
-                <div className="hidden md:block absolute top-1/2 -right-2 w-4 h-0.5 bg-black/25 transform -translate-y-1/2"></div>
+                <div className="absolute top-1/2 -right-2 hidden h-0.5 w-4 -translate-y-1/2 transform bg-black/25 lg:block"></div>
               )}
             </div>
           )

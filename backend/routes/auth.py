@@ -8,20 +8,22 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token
 from pymongo.errors import DuplicateKeyError
 
-from auth import hash_password, verify_password
-from db import create_user, get_user_by_email
+from ..auth import hash_password, verify_password
+from ..db import create_user, get_user_by_email
+from ..extensions import limiter
 
 auth_bp = Blueprint("auth", __name__)
 
 email_pattern = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 ADMIN_EMAILS = {
     value.strip().lower()
-    for value in os.getenv("ADMIN_EMAILS", "ni2@gmail.com").split(",")
+    for value in os.getenv("ADMIN_EMAILS", "").split(",")
     if value.strip()
 }
 
 
 @auth_bp.post("/auth/signup")
+@limiter.limit("10 per minute")
 def signup_handler():
     payload = request.get_json(silent=True) or {}
 
@@ -57,6 +59,7 @@ def signup_handler():
 
 
 @auth_bp.post("/auth/login")
+@limiter.limit("10 per minute")
 def login_handler():
     payload = request.get_json(silent=True) or {}
 

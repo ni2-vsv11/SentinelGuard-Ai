@@ -38,20 +38,20 @@ export function FeaturesSection() {
   ]
 
   return (
-    <section id="features" className="max-w-7xl mx-auto px-6 py-16 md:py-24">
-      <div className="flex flex-col md:flex-row items-center justify-between mb-12">
-        <div>
-          <h2 className="text-4xl font-bold mb-4">Unmatched Protection Features</h2>
+    <section id="features" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 md:py-24">
+      <div className="mb-10 flex flex-col items-start justify-between gap-4 md:mb-12 md:flex-row md:items-center">
+        <div className="max-w-2xl">
+          <h2 className="mb-4 text-3xl font-bold sm:text-4xl">Unmatched Protection Features</h2>
           <p className="text-foreground/60">
             Built for the modern enterprise, designed for human simplicity
           </p>
         </div>
-        <div className="mt-6 inline-block rounded-full border border-black/10 bg-white/68 px-4 py-2 backdrop-blur-sm backdrop-saturate-150 md:mt-0">
+        <div className="inline-block rounded-full border border-black/10 bg-white/68 px-4 py-2 backdrop-blur-sm backdrop-saturate-150 md:mt-0">
           <span className="text-sm font-semibold text-primary">5 Active Security Modules</span>
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {features.map((feature, index) => {
           const Icon = feature.icon
           return (
