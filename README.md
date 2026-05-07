@@ -1,4 +1,10 @@
-# SentinelGuard AI
+<div align="center">
+	<img src="app/icon.svg" alt="SentinelGuard AI logo" width="120" />
+
+  <h1>SentinelGuard AI</h1>
+
+	<p>AI-powered phishing detection with a modern dashboard and role-based access.</p>
+</div>
 
 SentinelGuard AI is a modern phishing detection platform that helps users inspect suspicious emails and URLs with AI-assisted analysis, a live dashboard, and role-based access for users and admins.
 
