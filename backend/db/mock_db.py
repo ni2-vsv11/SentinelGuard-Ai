@@ -8,6 +8,7 @@ from typing import Any
 # In-memory storage
 _users: dict[str, dict[str, Any]] = {}
 _scan_results: dict[str, dict[str, Any]] = {}
+_notifications: dict[str, dict[str, Any]] = {}
 
 
 def get_db() -> dict[str, Any]:
@@ -125,3 +126,77 @@ def fetch_users(limit: int = 50) -> list[dict[str, Any]]:
     """Fetch all users from mock database."""
     users = list(_users.values())
     return [_serialize_user(u) for u in users[:limit]]
+
+
+def create_notification(
+    user_email: str,
+    title: str,
+    message: str,
+    notification_type: str,
+    detection_details: dict[str, Any] | None = None,
+    severity: str = "medium",
+) -> dict[str, Any]:
+    """Create a notification for a user detection event."""
+    timestamp = datetime.now(timezone.utc).isoformat()
+    notification_id = str(uuid.uuid4())
+    
+    payload = {
+        "_id": notification_id,
+        "user_email": user_email.lower(),
+        "title": title,
+        "message": message,
+        "notification_type": notification_type,
+        "severity": severity,
+        "detection_details": detection_details or {},
+        "is_read": False,
+        "timestamp": timestamp,
+        "sent_email": False,
+    }
+    
+    _notifications[notification_id] = payload
+    return payload
+
+
+def fetch_user_notifications(user_email: str, limit: int = 50, unread_only: bool = False) -> list[dict[str, Any]]:
+    """Fetch notifications for a user."""
+    notifications = list(_notifications.values())
+    
+    # Filter by user email
+    notifications = [n for n in notifications if n["user_email"].lower() == user_email.lower()]
+    
+    # Filter unread only if requested
+    if unread_only:
+        notifications = [n for n in notifications if not n["is_read"]]
+    
+    # Sort by timestamp descending
+    notifications.sort(key=lambda x: x["timestamp"], reverse=True)
+    
+    return notifications[:limit]
+
+
+def mark_notification_as_read(notification_id: str) -> bool:
+    """Mark a notification as read."""
+    if notification_id in _notifications:
+        _notifications[notification_id]["is_read"] = True
+        _notifications[notification_id]["read_at"] = datetime.now(timezone.utc).isoformat()
+        return True
+    return False
+
+
+def mark_all_notifications_as_read(user_email: str) -> int:
+    """Mark all notifications for a user as read."""
+    count = 0
+    for notif in _notifications.values():
+        if notif["user_email"].lower() == user_email.lower() and not notif["is_read"]:
+            notif["is_read"] = True
+            notif["read_at"] = datetime.now(timezone.utc).isoformat()
+            count += 1
+    return count
+
+
+def get_unread_notification_count(user_email: str) -> int:
+    """Get count of unread notifications for a user."""
+    return len([
+        n for n in _notifications.values()
+        if n["user_email"].lower() == user_email.lower() and not n["is_read"]
+    ])

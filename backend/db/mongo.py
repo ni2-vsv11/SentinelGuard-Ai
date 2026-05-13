@@ -34,10 +34,14 @@ def get_db() -> Database:
     # Ensure core collections and useful indexes exist.
     scan_results: Collection = db["scan_results"]
     users: Collection = db["users"]
+    notifications: Collection = db["notifications"]
 
     scan_results.create_index([("timestamp", DESCENDING)])
     scan_results.create_index([("email", DESCENDING)])
     users.create_index("email", unique=True)
+    notifications.create_index([("user_email", DESCENDING)])
+    notifications.create_index([("timestamp", DESCENDING)])
+    notifications.create_index([("is_read", DESCENDING)])
 
     return db
 
@@ -161,3 +165,84 @@ def fetch_users(limit: int = 100) -> list[dict[str, Any]]:
     safe_limit = max(1, min(limit, 500))
     cursor = db["users"].find({}).sort("updated_at", DESCENDING).limit(safe_limit)
     return [_serialize_user(doc) for doc in cursor]
+
+
+def create_notification(
+    user_email: str,
+    title: str,
+    message: str,
+    notification_type: str,
+    detection_details: dict[str, Any] | None = None,
+    severity: str = "medium",
+) -> dict[str, Any]:
+    """Create a notification for a user detection event."""
+    db = get_db()
+
+    timestamp = datetime.now(timezone.utc).isoformat()
+    payload = {
+        "user_email": user_email,
+        "title": title,
+        "message": message,
+        "notification_type": notification_type,
+        "severity": severity,
+        "detection_details": detection_details or {},
+        "is_read": False,
+        "timestamp": timestamp,
+        "sent_email": False,
+    }
+
+    inserted = db["notifications"].insert_one(payload)
+    payload["_id"] = str(inserted.inserted_id)
+    return payload
+
+
+def fetch_user_notifications(user_email: str, limit: int = 50, unread_only: bool = False) -> list[dict[str, Any]]:
+    """Fetch notifications for a user."""
+    db = get_db()
+
+    query = {"user_email": user_email}
+    if unread_only:
+        query["is_read"] = False
+
+    safe_limit = max(1, min(limit, 200))
+    cursor = (
+        db["notifications"]
+        .find(query)
+        .sort("timestamp", DESCENDING)
+        .limit(safe_limit)
+    )
+    
+    results = []
+    for doc in cursor:
+        doc["_id"] = str(doc["_id"])
+        results.append(doc)
+    return results
+
+
+def mark_notification_as_read(notification_id: str) -> bool:
+    """Mark a notification as read."""
+    db = get_db()
+    from bson import ObjectId
+    
+    result = db["notifications"].update_one(
+        {"_id": ObjectId(notification_id)},
+        {"$set": {"is_read": True, "read_at": datetime.now(timezone.utc).isoformat()}},
+    )
+    return result.modified_count > 0
+
+
+def mark_all_notifications_as_read(user_email: str) -> int:
+    """Mark all notifications for a user as read."""
+    db = get_db()
+    
+    result = db["notifications"].update_many(
+        {"user_email": user_email, "is_read": False},
+        {"$set": {"is_read": True, "read_at": datetime.now(timezone.utc).isoformat()}},
+    )
+    return result.modified_count
+
+
+def get_unread_notification_count(user_email: str) -> int:
+    """Get count of unread notifications for a user."""
+    db = get_db()
+    return db["notifications"].count_documents({"user_email": user_email, "is_read": False})

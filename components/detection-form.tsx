@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { FormEvent, useMemo, useState } from 'react'
-import { AlertCircle, Globe2, Mail, ShieldAlert, ShieldCheck, Sparkles } from 'lucide-react'
+import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { AlertCircle, BellRing, Globe2, Mail, ShieldAlert, ShieldCheck, Sparkles, X } from 'lucide-react'
 
 import { API_BASE_URL, getAuthHeader } from '@/lib/auth'
 
@@ -21,6 +21,17 @@ type AnalysisSection = {
 type SeparateAnalysis = {
   email: AnalysisSection
   url: AnalysisSection
+}
+
+type ResultNotificationTone = 'safe' | 'warning' | 'danger'
+
+type ResultNotification = {
+  title: string
+  message: string
+  scope: string
+  tone: ResultNotificationTone
+  score: number
+  domain?: string
 }
 
 type AnalyzeApiResponse = Record<string, unknown> & {
@@ -92,6 +103,50 @@ function getTextValue(result: AnalyzeApiResponse | null, keys: string[]): string
   return null
 }
 
+function getResultNotificationTone(status: string): ResultNotificationTone {
+  const normalized = status.toLowerCase().trim()
+
+  if (normalized === 'safe') {
+    return 'safe'
+  }
+
+  if (normalized === 'harmful') {
+    return 'danger'
+  }
+
+  return 'warning'
+}
+
+function getNotificationStyles(tone: ResultNotificationTone) {
+  switch (tone) {
+    case 'safe':
+      return {
+        card: 'border-emerald-200/70 bg-gradient-to-br from-emerald-50/90 via-white/85 to-cyan-50/80',
+        accent: 'text-emerald-700 bg-emerald-100/90 ring-emerald-200/80',
+        icon: 'text-emerald-600',
+        bar: 'bg-emerald-500',
+      }
+    case 'danger':
+      return {
+        card: 'border-red-200/70 bg-gradient-to-br from-red-50/90 via-white/85 to-rose-50/80',
+        accent: 'text-red-700 bg-red-100/90 ring-red-200/80',
+        icon: 'text-red-600',
+        bar: 'bg-red-500',
+      }
+    default:
+      return {
+        card: 'border-amber-200/70 bg-gradient-to-br from-amber-50/90 via-white/85 to-orange-50/80',
+        accent: 'text-amber-700 bg-amber-100/90 ring-amber-200/80',
+        icon: 'text-amber-600',
+        bar: 'bg-amber-500',
+      }
+  }
+}
+
+function getResultNotificationKey(notification: ResultNotification) {
+  return `${notification.scope}-${notification.title}-${notification.domain ?? 'general'}`
+}
+
 export function DetectionForm({ embedded = false }: DetectionFormProps) {
   const [emailText, setEmailText] = useState('')
   const [urlText, setUrlText] = useState('')
@@ -99,6 +154,7 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [requiresLogin, setRequiresLogin] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [visibleToasts, setVisibleToasts] = useState<ResultNotification[]>([])
 
   const probability = useMemo(() => getProbability(result), [result])
 
@@ -134,6 +190,13 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
   const senderText = useMemo(() => {
     return getTextValue(result, ['identified_sender', 'sender'])
   }, [result])
+
+  const inputSummary =
+    emailText.trim() && urlText.trim()
+      ? 'Email and URL'
+      : emailText.trim()
+        ? 'Email only'
+        : 'URL only'
 
   const separateAnalysis = result?.separate_analysis
 
@@ -182,13 +245,64 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
         shadow: 'shadow-[0_18px_50px_-24px_rgba(16,185,129,0.45)]',
       }
 
+  const resultNotifications = useMemo<ResultNotification[]>(() => {
+    if (!result) {
+      return []
+    }
+
+    const notifications: ResultNotification[] = []
+
+    const addNotification = (
+      scope: string,
+      section: Pick<AnalysisSection, 'status' | 'risk_score' | 'site_domain'>
+    ) => {
+      const tone = getResultNotificationTone(section.status)
+      const score = Math.round(Number(section.risk_score ?? probability ?? 0))
+      const title = tone === 'safe' ? 'Safe scan' : tone === 'danger' ? 'High-risk alert' : 'Suspicious alert'
+      const message =
+        tone === 'safe'
+          ? `${scope} looks safe. No phishing indicators were found.`
+          : `${scope} flagged as ${section.status.toLowerCase()} with a ${score}% risk score.`
+
+      notifications.push({
+        title,
+        message,
+        scope,
+        tone,
+        score,
+        domain: section.site_domain,
+      })
+    }
+
+    if (separateAnalysis) {
+      addNotification('Email analysis', separateAnalysis.email)
+      addNotification('URL analysis', separateAnalysis.url)
+    } else {
+      addNotification(inputSummary, {
+        status: verdictLabel,
+        risk_score: probability ?? 0,
+        site_domain: result.site_domain,
+      })
+    }
+
+    return notifications
+  }, [inputSummary, probability, result, separateAnalysis, verdictLabel])
+
+  useEffect(() => {
+    if (resultNotifications.length === 0) {
+      setVisibleToasts([])
+      return
+    }
+
+    setVisibleToasts(resultNotifications)
+    const timer = window.setTimeout(() => {
+      setVisibleToasts([])
+    }, 7000)
+
+    return () => window.clearTimeout(timer)
+  }, [resultNotifications])
+
   const VerdictIcon = verdictTone.icon
-  const inputSummary =
-    emailText.trim() && urlText.trim()
-      ? 'Email and URL'
-      : emailText.trim()
-        ? 'Email only'
-        : 'URL only'
 
   const handleAnalyze = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -244,6 +358,7 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
       }
 
       setResult(responseData)
+      window.dispatchEvent(new CustomEvent('scanCompleted', { detail: responseData }))
 
       // Persist successful scan so dashboard history can show recent entries.
       if (Object.keys(authHeaders).length > 0) {
@@ -261,7 +376,6 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
         })
       }
 
-      window.dispatchEvent(new CustomEvent('scanCompleted', { detail: responseData }))
     } catch (error) {
       if (error instanceof Error && error.message === 'Session expired. Please log in again.') {
         setRequiresLogin(true)
@@ -564,6 +678,74 @@ export function DetectionForm({ embedded = false }: DetectionFormProps) {
           </div>
         )}
       </form>
+
+      {visibleToasts.length > 0 && (
+        <div className="pointer-events-none fixed right-4 top-4 z-[80] w-[min(92vw,28rem)] space-y-3 sm:right-6 sm:top-6">
+          {visibleToasts.map((notification) => {
+            const styles = getNotificationStyles(notification.tone)
+            const toastKey = getResultNotificationKey(notification)
+
+            return (
+              <article
+                key={toastKey}
+                className={`pointer-events-auto overflow-hidden rounded-[1.8rem] border ${styles.card} shadow-[0_26px_75px_-32px_rgba(15,23,42,0.4)] backdrop-blur-2xl transition-all duration-300`}
+              >
+                <div className={`h-1.5 w-full ${styles.bar}`} />
+                <div className="p-4 sm:p-5">
+                  <div className="flex items-start gap-3">
+                    <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/70 bg-white/80 shadow-sm ${styles.icon}`}>
+                      <BellRing size={18} />
+                    </div>
+                    <div className="min-w-0 flex-1 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 ${styles.accent}`}>
+                              {notification.title}
+                            </span>
+                            <span className="inline-flex items-center rounded-full border border-white/70 bg-white/80 px-3 py-1 text-xs font-medium text-foreground/65 shadow-sm backdrop-blur-xl">
+                              {notification.scope}
+                            </span>
+                          </div>
+                          <p className="mt-2 break-words text-sm leading-6 text-foreground/75">
+                            {notification.message}
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          className="pointer-events-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/70 bg-white/80 text-foreground/70 shadow-sm transition hover:bg-white hover:text-foreground"
+                          onClick={() => setVisibleToasts((current) => current.filter((item) => getResultNotificationKey(item) !== toastKey))}
+                          aria-label="Dismiss notification"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        <div className="rounded-2xl border border-white/70 bg-white/70 p-3 shadow-sm backdrop-blur-xl">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-foreground/40">Risk score</p>
+                          <p className="mt-1 text-lg font-semibold text-foreground">{notification.score}%</p>
+                        </div>
+                        <div className="rounded-2xl border border-white/70 bg-white/70 p-3 shadow-sm backdrop-blur-xl">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-foreground/40">Status</p>
+                          <p className="mt-1 text-lg font-semibold text-foreground">{notification.tone === 'safe' ? 'Safe' : notification.tone === 'danger' ? 'Harmful' : 'Suspicious'}</p>
+                        </div>
+                      </div>
+
+                      {notification.domain ? (
+                        <div className="rounded-2xl border border-white/70 bg-white/70 p-3 text-sm text-foreground/70 shadow-sm backdrop-blur-xl">
+                          <span className="font-semibold text-foreground">Domain:</span> {notification.domain}
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              </article>
+            )
+          })}
+        </div>
+      )}
     </section>
   )
 }

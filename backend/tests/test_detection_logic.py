@@ -34,6 +34,17 @@ class DetectionLogicTests(unittest.TestCase):
         self.assertIn(classify_risk(float(result["risk_score"])), {"Suspicious", "Harmful"})
         self.assertGreaterEqual(float(result["risk_score"]), 60.0)
 
+    def test_typo_squatted_brand_domains_are_flagged(self) -> None:
+        facebok_result = predict_phishing("", "https://faceb00k.com", input_type="url")
+        google_typo_result = predict_phishing("", "https://gogle.com", input_type="url")
+
+        self.assertEqual(facebok_result["prediction"], "Phishing")
+        self.assertEqual(google_typo_result["prediction"], "Phishing")
+        self.assertGreaterEqual(float(facebok_result["risk_score"]), 60.0)
+        self.assertGreaterEqual(float(google_typo_result["risk_score"]), 60.0)
+        self.assertEqual(classify_risk(float(facebok_result["risk_score"])), "Suspicious")
+        self.assertEqual(classify_risk(float(google_typo_result["risk_score"])), "Suspicious")
+
     def test_ip_based_verify_url_is_harmful(self) -> None:
         result = predict_phishing("", "http://192.168.12.44/verify/account", input_type="url")
 

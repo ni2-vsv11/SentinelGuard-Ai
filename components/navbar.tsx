@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { Menu, X } from 'lucide-react'
 
 import { BrandLogo } from '@/components/brand-logo'
+import { NotificationsBell } from '@/components/notifications-panel'
 import { clearAuthStorage, getStoredUser, syncAuthSessionFromStorage, type AuthUser } from '@/lib/auth'
 
 export function Navbar() {
@@ -66,6 +67,7 @@ export function Navbar() {
           <div className="hidden items-center gap-2 sm:flex md:gap-4">
             {user ? (
               <>
+                <NotificationsBell />
                 <Link
                   href="/dashboard"
                   className="text-sm font-medium text-foreground transition hover:text-primary"

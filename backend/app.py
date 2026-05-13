@@ -18,7 +18,7 @@ if not __package__:
 from .auth import hash_password
 from .db import get_db, upsert_admin_user
 from .extensions import limiter
-from .routes import analyze_bp, auth_bp, scan_results_bp, users_bp
+from .routes import analyze_bp, auth_bp, notifications_bp, scan_results_bp, users_bp
 
 
 DEFAULT_ADMIN_EMAIL = os.getenv("ADMIN_DEFAULT_EMAIL", "").strip().lower()
@@ -67,6 +67,7 @@ def create_app() -> Flask:
 
     app.register_blueprint(analyze_bp)
     app.register_blueprint(auth_bp)
+    app.register_blueprint(notifications_bp)
     app.register_blueprint(scan_results_bp)
     app.register_blueprint(users_bp)
 
