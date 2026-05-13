@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import get_jwt_identity, jwt_required
 
+from ..db import create_notification
 from ..ml import build_analysis_context, classify_risk, generate_ai_explanation, predict_phishing
 
 analyze_bp = Blueprint("analyze", __name__)
@@ -9,6 +10,7 @@ analyze_bp = Blueprint("analyze", __name__)
 @analyze_bp.post("/analyze")
 @jwt_required()
 def analyze_email_and_url():
+    user_email = get_jwt_identity()
     payload = request.get_json(silent=True) or {}
 
     email = str(payload.get("email", "")).strip()
@@ -136,5 +138,53 @@ def analyze_email_and_url():
                 "prediction": url_result.get("prediction", "Safe"),
             }
         }
+
+    # Create a notification for every scan so the bell reflects the full check history.
+    if status == "Harmful":
+        severity = "high"
+        notification_title = "⚠️ Harmful Content Detected"
+        notification_message = (
+            f"A {input_type} scan was flagged as harmful with {risk_score:.0f}% risk score."
+            if input_type != "both"
+            else (
+                f"Email and URL were flagged as harmful. Email risk: {response_data['separate_analysis']['email']['risk_score']:.0f}%, "
+                f"URL risk: {response_data['separate_analysis']['url']['risk_score']:.0f}%"
+            )
+        )
+    elif status == "Suspicious":
+        severity = "medium"
+        notification_title = "⚠️ Suspicious Content Detected"
+        notification_message = (
+            f"A {input_type} scan was flagged as suspicious with {risk_score:.0f}% risk score."
+            if input_type != "both"
+            else (
+                f"Email and URL were flagged as suspicious. Email risk: {response_data['separate_analysis']['email']['risk_score']:.0f}%, "
+                f"URL risk: {response_data['separate_analysis']['url']['risk_score']:.0f}%"
+            )
+        )
+    else:
+        severity = "low"
+        notification_title = "✅ Safe Scan Completed"
+        notification_message = (
+            "The scan completed successfully and no phishing indicators were found."
+            if input_type != "both"
+            else "The email and URL scan completed successfully and no phishing indicators were found."
+        )
+
+    create_notification(
+        user_email=user_email,
+        title=notification_title,
+        message=notification_message,
+        notification_type="detection",
+        severity=severity,
+        detection_details={
+            "input_type": input_type,
+            "status": status,
+            "risk_score": risk_score,
+            "url": url[:100] if url else None,
+            "email_preview": email[:200] if email else None,
+            "timestamp": response_data.get("timestamp"),
+        },
+    )
 
     return jsonify(response_data), 200

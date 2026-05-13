@@ -120,6 +120,7 @@ TRUSTED_ROOT_DOMAINS = {
     "amazon.com",
     "apple.com",
     "cloudflare.com",
+    "facebook.com",
     "dropbox.com",
     "github.com",
     "gitlab.com",
@@ -137,6 +138,7 @@ KNOWN_BRAND_ROOTS = {
     "adobe": "adobe.com",
     "amazon": "amazon.com",
     "apple": "apple.com",
+    "facebook": "facebook.com",
     "dropbox": "dropbox.com",
     "github": "github.com",
     "gitlab": "gitlab.com",
@@ -162,8 +164,33 @@ COMPOUND_TLDS = {
     "org.uk",
 }
 
+LEET_TRANSLATION = str.maketrans(
+    {
+        "0": "o",
+        "1": "l",
+        "3": "e",
+        "4": "a",
+        "5": "s",
+        "7": "t",
+        "8": "b",
+        "9": "g",
+    }
+)
+
+TYPO_PHISHING_BRANDS = {
+    "google": ["gogle", "g00gle"],
+    "facebook": ["faceb00k", "facebok"],
+    "microsoft": ["micros0ft"],
+    "paypal": ["paypa1"],
+    "apple": ["appl3"],
+    "dropbox": ["dr0pbox"],
+    "github": ["githb"],
+    "linkedin": ["1inkedin"],
+}
+
 _MODEL_CACHE: Pipeline | None = None
 _MODEL_CACHE_MTIME: float | None = None
+MODEL_VERSION = 4
 
 
 def _clean_text(value: str) -> str:
@@ -193,6 +220,93 @@ def _extract_root_domain(host: str) -> str:
         return ".".join(labels[-3:])
 
     return ".".join(labels[-2:])
+
+
+def _normalize_brand_token(value: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", value.lower().translate(LEET_TRANSLATION))
+
+
+def _levenshtein_distance(left: str, right: str, max_distance: int = 2) -> int:
+    if left == right:
+        return 0
+
+    if abs(len(left) - len(right)) > max_distance:
+        return max_distance + 1
+
+    previous_row = list(range(len(right) + 1))
+    for left_index, left_char in enumerate(left, start=1):
+        current_row = [left_index]
+        row_min = left_index
+
+        for right_index, right_char in enumerate(right, start=1):
+            insert_cost = current_row[right_index - 1] + 1
+            delete_cost = previous_row[right_index] + 1
+            substitute_cost = previous_row[right_index - 1] + (left_char != right_char)
+            value = min(insert_cost, delete_cost, substitute_cost)
+            current_row.append(value)
+            row_min = min(row_min, value)
+
+        if row_min > max_distance:
+            return max_distance + 1
+
+        previous_row = current_row
+
+    return previous_row[-1]
+
+
+def _generate_typo_variants(brand: str) -> set[str]:
+    normalized = _normalize_brand_token(brand)
+    variants: set[str] = set()
+
+    substitution_pairs = [
+        ("a", "4"),
+        ("e", "3"),
+        ("i", "1"),
+        ("l", "1"),
+        ("o", "0"),
+        ("s", "5"),
+        ("t", "7"),
+    ]
+
+    for source, target in substitution_pairs:
+        if source in normalized:
+            variants.add(normalized.replace(source, target, 1))
+            variants.add(normalized.replace(source, target))
+
+    for match in re.finditer(r"(.)\1+", normalized):
+        start = match.start(1)
+        variants.add(normalized[:start] + normalized[start + 1 :])
+
+    for index in range(len(normalized)):
+        if len(normalized) > 4:
+            variants.add(normalized[:index] + normalized[index + 1 :])
+
+    return {variant for variant in variants if variant and variant != normalized}
+
+
+def _detect_brand_typosquat(host: str, root_domain: str) -> str | None:
+    host_labels = [label for label in host.split(".") if label]
+    normalized_labels = [_normalize_brand_token(label) for label in host_labels if label]
+    combined = _normalize_brand_token("".join(host_labels))
+
+    if not host_labels:
+        return None
+
+    for brand, official_root in KNOWN_BRAND_ROOTS.items():
+        if root_domain == official_root:
+            continue
+
+        brand_token = _normalize_brand_token(brand)
+        candidate_tokens = [token for token in normalized_labels if token] + [combined]
+
+        for candidate in candidate_tokens:
+            if candidate == brand_token:
+                return brand
+            if len(candidate) >= 4 and len(brand_token) >= 4:
+                if _levenshtein_distance(candidate, brand_token, max_distance=1) <= 1:
+                    return brand
+
+    return None
 
 
 def _is_ip_host(host: str) -> bool:
@@ -228,6 +342,11 @@ def _extract_url_feature_tokens(url: str) -> list[str]:
     tokens.append("url_long" if len(normalized) >= 70 else "url_short")
     tokens.append(f"url_subdomain_dots_{min(host.count('.'), 5)}")
     tokens.append("url_has_query" if parsed.query else "url_no_query")
+
+    brand_variant = _detect_brand_typosquat(host, root_domain)
+    if brand_variant:
+        tokens.append(f"url_brand_variant_{brand_variant}")
+        tokens.append("url_brand_typosquat")
 
     for word in SUSPICIOUS_URL_WORDS:
         if word in f"{host} {path_query}":
@@ -288,10 +407,33 @@ def _load_dataset(dataset_path: Path) -> tuple[list[str], list[str]]:
             texts.append(_combine_features(email=email, url=url))
             labels.append(label)
 
+    augmented_texts = list(texts)
+    augmented_labels = list(labels)
     if not texts:
         raise ValueError("Dataset is empty or invalid. Expected columns: email,url,label")
 
-    return texts, labels
+    for brand, typos in TYPO_PHISHING_BRANDS.items():
+        for typo in typos:
+            augmented_texts.append(
+                _combine_features(
+                    email=f"Urgent {brand} account alert: verify your password now.",
+                    url=f"https://{typo}.com/login",
+                )
+            )
+            augmented_labels.append("phishing")
+
+            augmented_texts.append(
+                _combine_features(
+                    email=f"{brand.title()} security notice: confirm your identity immediately.",
+                    url=f"https://secure-{typo}.com/account/update",
+                )
+            )
+            augmented_labels.append("phishing")
+
+    if not augmented_texts:
+        raise ValueError("Dataset is empty or invalid. Expected columns: email,url,label")
+
+    return augmented_texts, augmented_labels
 
 
 def _build_pipeline(ngram_range: tuple[int, int], c_value: float) -> Pipeline:
@@ -391,7 +533,7 @@ def train_and_save_model(
     training_accuracy = float(pipeline.score(texts, labels))
 
     artifact = {
-        "version": 3,
+        "version": MODEL_VERSION,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "pipeline": pipeline,
         "metrics": {
@@ -431,6 +573,9 @@ def _load_model(model_path: Path = DEFAULT_MODEL_PATH) -> Pipeline:
         return artifact
 
     if isinstance(artifact, dict) and isinstance(artifact.get("pipeline"), Pipeline):
+        version = int(artifact.get("version", 0) or 0)
+        if version < MODEL_VERSION:
+            raise ValueError("Stale model artifact")
         return artifact["pipeline"]
 
     raise ValueError("Unsupported model artifact format.")
@@ -446,7 +591,14 @@ def _get_or_load_cached_model(model_path: Path = DEFAULT_MODEL_PATH) -> Pipeline
     if _MODEL_CACHE is not None and _MODEL_CACHE_MTIME == current_mtime:
         return _MODEL_CACHE
 
-    loaded = _load_model(model_path)
+    try:
+        loaded = _load_model(model_path)
+    except ValueError as exc:
+        if "Stale model artifact" not in str(exc):
+            raise
+        train_and_save_model(model_path=model_path)
+        loaded = _load_model(model_path)
+        current_mtime = model_path.stat().st_mtime
     _MODEL_CACHE = loaded
     _MODEL_CACHE_MTIME = current_mtime
     return loaded
@@ -465,19 +617,7 @@ def _phishing_probability_percent(pipeline: Pipeline, features: list[str]) -> fl
 
 
 def _domain_brand_impersonation(host: str, root_domain: str) -> bool:
-    host_lower = host.lower()
-    host_parts = host_lower.split(".")
-    
-    for brand, official_root in KNOWN_BRAND_ROOTS.items():
-        # Check if brand appears anywhere in the host
-        if brand in host_lower and root_domain != official_root:
-            # If brand is part of a subdomain (but not the root), it's impersonation
-            if brand in host_parts[:-2]:  # Check if brand is in subdomain parts, not TLD/root
-                return True
-            # Also catch cases where brand.com appears as part of the subdomain
-            if f"{brand}.com" in host_lower and root_domain != official_root:
-                return True
-    return False
+    return _detect_brand_typosquat(host, root_domain) is not None
 
 
 def _score_url_risk(url: str) -> tuple[float, dict[str, Any]]:
@@ -528,15 +668,11 @@ def _score_url_risk(url: str) -> tuple[float, dict[str, Any]]:
     if re.search(r"\.(?:apk|bat|cmd|dmg|exe|iso|js|msi|scr|zip)$", parsed.path.lower()):
         risk += 20
 
-    # Check for brand names appearing in subdomain structure (e.g., paypal.com in subdomains)
-    for brand, official_root in KNOWN_BRAND_ROOTS.items():
-        if f"{brand}.com" in host.lower() and root_domain != official_root:
-            risk += 25  # Additional penalty for brand.com appearing in subdomains
-            major_flags += 1
-            break
-
-    brand_impersonation = _domain_brand_impersonation(host, root_domain)
-    if brand_impersonation:
+    brand_variant = _detect_brand_typosquat(host, root_domain)
+    if brand_variant:
+        risk += 72
+        major_flags += 1
+    elif _domain_brand_impersonation(host, root_domain):
         risk += 22
         major_flags += 1
 
