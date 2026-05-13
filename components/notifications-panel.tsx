@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { AlertCircle, Bell, BellRing, CheckCircle2, ExternalLink, ShieldAlert, X } from 'lucide-react'
 import { getAuthHeader } from '@/lib/auth'
 
@@ -161,7 +162,14 @@ export function NotificationsPanel({ isOpen = true, onClose }: NotificationsPane
   }
 
   return (
-    <div className="fixed right-4 top-4 z-50 flex h-[calc(100vh-2rem)] w-[min(92vw,28rem)] flex-col overflow-hidden rounded-[2rem] border border-white/60 bg-white/60 shadow-[0_30px_80px_-24px_rgba(15,23,42,0.38)] backdrop-blur-2xl transition-transform duration-300">
+    <div
+      className="fixed z-50 flex w-[min(92vw,28rem)] flex-col overflow-hidden rounded-[2rem] border border-white/60 bg-white/60 shadow-[0_30px_80px_-24px_rgba(15,23,42,0.38)] backdrop-blur-2xl transition-transform duration-300"
+      style={{
+        right: '1rem',
+        top: 'max(1rem, env(safe-area-inset-top))',
+        height: 'calc(100dvh - max(1rem, env(safe-area-inset-top)) - 1rem)',
+      }}
+    >
       <div className="border-b border-white/55 bg-gradient-to-r from-white/75 via-white/55 to-cyan-50/55 p-4">
         <div className="flex items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
@@ -280,6 +288,13 @@ export function NotificationsPanel({ isOpen = true, onClose }: NotificationsPane
 export function NotificationsBell() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [isPanelOpen, setIsPanelOpen] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+
+    return () => setIsMounted(false)
+  }, [])
 
   useEffect(() => {
     const handleScanCompleted = () => {
@@ -332,7 +347,12 @@ export function NotificationsBell() {
         )}
       </button>
 
-      {isPanelOpen && <NotificationsPanel isOpen={isPanelOpen} onClose={() => setIsPanelOpen(false)} />}
+      {isMounted &&
+        isPanelOpen &&
+        createPortal(
+          <NotificationsPanel isOpen={isPanelOpen} onClose={() => setIsPanelOpen(false)} />,
+          document.body
+        )}
     </>
   )
 }
